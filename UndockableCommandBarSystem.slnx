@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="CommandBar.Core/CommandBar.Core.csproj" />
+  <Project Path="CommandBar.DemoApp/CommandBar.DemoApp.csproj" />
+  <Project Path="CommandBar.UI/CommandBar.UI.csproj" />
+</Solution>

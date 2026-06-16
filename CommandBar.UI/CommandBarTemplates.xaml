@@ -1,0 +1,40 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:models="clr-namespace:CommandBar.Core.Models;assembly=CommandBar.Core">
+
+    <DataTemplate DataType="{x:Type models:CommandItem}">
+        <Button Command="{Binding ExecuteItemCommand}" 
+                ToolTip="{Binding Tooltip}"
+                Margin="2" Padding="4">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{Binding Text}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Button>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type models:CommandToggleItem}">
+        <ToggleButton IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                      Command="{Binding ExecuteItemCommand}" 
+                      ToolTip="{Binding Tooltip}"
+                      Margin="2" Padding="4">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{Binding Text}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </ToggleButton>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type models:CommandSeparator}">
+        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" 
+                   Margin="4,2"/>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type models:CommandDropdownItem}">
+        <Menu Background="Transparent">
+            <MenuItem Header="{Binding Text}" 
+                      ItemsSource="{Binding ChildItems}"
+                      ToolTip="{Binding Tooltip}"
+                      Padding="4"/>
+        </Menu>
+    </DataTemplate>
+
+</ResourceDictionary>
