@@ -8,7 +8,7 @@ namespace CommandBar.Core.Models
         public ObservableCollection<CommandItem> ChildItems { get; } = new ObservableCollection<CommandItem>();
 
         public CommandDropdownItem()
-        {
+    {
             // Dropdowns usually don't have a direct click action that executes a command, 
             // they just open the flyout menu containing the ChildItems.
         }
