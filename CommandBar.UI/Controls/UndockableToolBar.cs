@@ -61,20 +61,18 @@ namespace CommandBar.UI.Controls
             {
                 if (e.ButtonState == MouseButtonState.Pressed)
                 {
-                    // NEW: Hook the movement event
                     floatingWindow.LocationChanged += FloatingWindow_LocationChanged;
-
-                    floatingWindow.DragMove();
-
-                    // NEW: Unhook the event when they let go of the mouse
+                    
+                    floatingWindow.DragMove(); 
+                    
                     floatingWindow.LocationChanged -= FloatingWindow_LocationChanged;
-
-                    // NEW: Ensure we clean up the visual ghost when dropping
-                    ClearGhostAdorner();
+                    
+                    // NEW: Ask the ORIGINAL toolbar to clear the ghost!
+                    floatingWindow.OriginalToolBar?.ClearGhostAdorner();
 
                     floatingWindow.OriginalToolBar?.CheckForRedock(floatingWindow);
                 }
-                return;
+                return; 
             }
 
             _isDragging = true;
@@ -176,13 +174,12 @@ namespace CommandBar.UI.Controls
             }
         }
 
-        // NEW: The logic that decides whether to show or hide the ghost
         public void UpdateGhostAdorner(FloatingToolBarWindow floatingWindow)
         {
             var mainWindow = Window.GetWindow(this);
-            if (mainWindow == null) return;
+            // NEW: Get the root visual element inside the main window
+            if (mainWindow == null || mainWindow.Content is not UIElement rootElement) return;
 
-            // We use the exact same Hit-Test logic from our CheckForRedock method
             Point mousePos = Mouse.GetPosition(mainWindow);
             bool isOverDockZone = mousePos.Y >= -20 && mousePos.Y <= 50 &&
                                   mousePos.X >= -20 && mousePos.X <= mainWindow.ActualWidth + 20;
@@ -191,33 +188,34 @@ namespace CommandBar.UI.Controls
             {
                 if (_currentAdorner == null)
                 {
-                    // Find the master AdornerLayer of the main application window
-                    var adornerLayer = AdornerLayer.GetAdornerLayer(mainWindow);
+                    // NEW: Ask WPF to find the AdornerLayer above the ROOT ELEMENT, not the window
+                    var adornerLayer = AdornerLayer.GetAdornerLayer(rootElement);
                     if (adornerLayer != null)
                     {
-                        // Calculate how big the ghost should be (e.g., full width of the main window)
                         double barHeight = this.ActualHeight > 0 ? this.ActualHeight : 32;
                         Rect dockRect = new Rect(0, 0, mainWindow.ActualWidth, barHeight);
 
-                        _currentAdorner = new DockingGhostAdorner(mainWindow, dockRect);
+                        // NEW: We adorn the root element
+                        _currentAdorner = new DockingGhostAdorner(rootElement, dockRect);
                         adornerLayer.Add(_currentAdorner);
                     }
                 }
             }
             else
             {
-                ClearGhostAdorner(); // We left the zone, erase the ghost
+                ClearGhostAdorner();
             }
         }
 
-        private void ClearGhostAdorner()
+        public void ClearGhostAdorner()
         {
             if (_currentAdorner != null)
             {
                 var mainWindow = Window.GetWindow(this);
-                if (mainWindow != null)
+                // NEW: Ensure we clear it from the correct layer
+                if (mainWindow?.Content is UIElement rootElement)
                 {
-                    var adornerLayer = AdornerLayer.GetAdornerLayer(mainWindow);
+                    var adornerLayer = AdornerLayer.GetAdornerLayer(rootElement);
                     adornerLayer?.Remove(_currentAdorner);
                 }
                 _currentAdorner = null;
