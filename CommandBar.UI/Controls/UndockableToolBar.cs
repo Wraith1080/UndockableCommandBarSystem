@@ -4,6 +4,9 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Collections;
+using System.Windows.Media;
+using CommandBar.Core.Models;
 
 namespace CommandBar.UI.Controls
 {
@@ -12,6 +15,15 @@ namespace CommandBar.UI.Controls
         private UIElement? _dragGrip;
         private bool _isDragging;
         private Point _startMousePosition;
+        private Point _itemDragStart;
+        private bool _isPreparingToDragItem;
+        private InsertionCaretAdorner? _caretAdorner;
+
+        public UndockableToolBar()
+        {
+            // CRITICAL: Tells the OS this control is allowed to accept dropped items
+            AllowDrop = true;
+        }
 
         // NEW: Keep track of the active ghost so we can remove it later
         private DockingGhostAdorner? _currentAdorner;
@@ -220,6 +232,178 @@ namespace CommandBar.UI.Controls
                     adornerLayer?.Remove(_currentAdorner);
                 }
                 _currentAdorner = null;
+            }
+        }
+
+        protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
+        {
+            base.OnPreviewMouseLeftButtonDown(e);
+
+            // If they clicked the drag grip, ignore it! (Let your existing Tear-off logic handle it)
+            if (_dragGrip != null && _dragGrip.IsMouseOver) return;
+
+            // NEW: Use native WPF hit testing to find the clicked visual element
+            if (VisualTreeHelper.HitTest(this, e.GetPosition(this))?.VisualHit is DependencyObject hit)
+            {
+                // Check if the hit element belongs to one of our generated item containers
+                var container = ItemsControl.ContainerFromElement(this, hit) as ContentPresenter;
+                if (container != null)
+                {
+                    _isPreparingToDragItem = true;
+                    _itemDragStart = e.GetPosition(this);
+                }
+            }
+        }
+
+        protected override void OnPreviewMouseMove(MouseEventArgs e)
+        {
+            base.OnPreviewMouseMove(e);
+
+            if (_isPreparingToDragItem && e.LeftButton == MouseButtonState.Pressed)
+            {
+                Vector diff = e.GetPosition(this) - _itemDragStart;
+
+                // If they dragged the mouse past the "accidental twitch" threshold
+                if (Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
+                    Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance)
+                {
+                    _isPreparingToDragItem = false;
+                    StartItemDragDrop(e.GetPosition(this));
+                }
+            }
+        }
+
+        private void StartItemDragDrop(Point startPoint)
+        {
+            // NEW: Find the original clicked element natively
+            if (VisualTreeHelper.HitTest(this, startPoint)?.VisualHit is not DependencyObject hit) return;
+
+            var container = ItemsControl.ContainerFromElement(this, hit) as ContentPresenter;
+            if (container == null) return;
+
+            var dataItem = this.ItemContainerGenerator.ItemFromContainer(container);
+            if (dataItem == null) return;
+
+            DragDrop.DoDragDrop(container, new DataObject("CommandItemFormat", dataItem), DragDropEffects.Move);
+
+            RemoveCaret();
+        }
+
+        protected override void OnDragOver(DragEventArgs e)
+        {
+            base.OnDragOver(e);
+
+            // Only react if the thing being dragged is our custom command format
+            if (!e.Data.GetDataPresent("CommandItemFormat"))
+            {
+                e.Effects = DragDropEffects.None;
+                RemoveCaret();
+                e.Handled = true;
+                return;
+            }
+
+            e.Effects = DragDropEffects.Move;
+            DrawCaret(e.GetPosition(this));
+            e.Handled = true;
+        }
+
+        protected override void OnDragLeave(DragEventArgs e)
+        {
+            base.OnDragLeave(e);
+            RemoveCaret(); // Erase the line if they drag the mouse out of the toolbar
+        }
+
+        protected override void OnDrop(DragEventArgs e)
+        {
+            base.OnDrop(e);
+            RemoveCaret();
+
+            var draggedData = e.Data.GetData("CommandItemFormat") as CommandItem;
+            if (draggedData == null || this.ItemsSource is not IList list) return;
+
+            // NEW: Use the math engine to find the drop index
+            int insertIndex = CalculateInsertionState(e.GetPosition(this), out _);
+            int oldIndex = list.IndexOf(draggedData);
+
+            if (oldIndex != -1 && oldIndex != insertIndex)
+            {
+                if (oldIndex < insertIndex) insertIndex--;
+
+                list.RemoveAt(oldIndex);
+                list.Insert(insertIndex, draggedData);
+            }
+            else if (oldIndex == -1)
+            {
+                list.Insert(insertIndex, draggedData);
+            }
+
+            e.Handled = true;
+        }
+
+        // --- VISUAL & MATH HELPERS ---
+
+        // --- NEW GEOMETRIC MATH ENGINE ---
+
+        private void DrawCaret(Point mousePos)
+        {
+            if (_caretAdorner == null)
+            {
+                var adornerLayer = AdornerLayer.GetAdornerLayer(this);
+                if (adornerLayer == null) return;
+                _caretAdorner = new InsertionCaretAdorner(this);
+                adornerLayer.Add(_caretAdorner);
+            }
+
+            CalculateInsertionState(mousePos, out double caretX);
+            _caretAdorner.UpdatePosition(new Point(caretX, 0));
+        }
+
+        private int CalculateInsertionState(Point mousePos, out double caretX)
+        {
+            int targetIndex = this.Items.Count;
+            caretX = 0;
+
+            if (this.Items.Count == 0) return 0;
+
+            UIElement? lastContainer = null;
+
+            // Iterate through every visible item in the toolbar
+            for (int i = 0; i < this.Items.Count; i++)
+            {
+                var container = this.ItemContainerGenerator.ContainerFromIndex(i) as UIElement;
+                if (container == null) continue;
+
+                lastContainer = container;
+
+                // Calculate the exact mathematical midpoint of the button
+                Point containerPos = container.TranslatePoint(new Point(0, 0), this);
+                double containerMidpoint = containerPos.X + (container.RenderSize.Width / 2);
+
+                // If the mouse is to the left of the midpoint, this is our drop target!
+                if (mousePos.X < containerMidpoint)
+                {
+                    targetIndex = i;
+                    caretX = containerPos.X; // Snap caret to the left edge
+                    return targetIndex;
+                }
+            }
+
+            // If we looped through everything, the mouse is past the very last button
+            if (lastContainer != null)
+            {
+                Point lastPos = lastContainer.TranslatePoint(new Point(0, 0), this);
+                caretX = lastPos.X + lastContainer.RenderSize.Width; // Snap caret to the right edge
+            }
+
+            return targetIndex;
+        }
+
+        private void RemoveCaret()
+        {
+            if (_caretAdorner != null)
+            {
+                AdornerLayer.GetAdornerLayer(this)?.Remove(_caretAdorner);
+                _caretAdorner = null;
             }
         }
     }
