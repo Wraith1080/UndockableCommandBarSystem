@@ -23,6 +23,8 @@ namespace CommandBar.UI.Controls
         {
             // CRITICAL: Tells the OS this control is allowed to accept dropped items
             AllowDrop = true;
+            // NEW: Prevent the toolbar background and drag-grip from accepting focus
+            Focusable = false;
         }
 
         // NEW: Keep track of the active ghost so we can remove it later
@@ -122,6 +124,14 @@ namespace CommandBar.UI.Controls
 
             // NEW: Give the floating window a reference to this original toolbar
             floatingWindow.OriginalToolBar = this;
+
+            // NEW: Bind the floating palette to the main application window!
+            // This prevents the OS from treating it as a competing, separate application.
+            var mainWindow = Window.GetWindow(this);
+            if (mainWindow != null)
+            {
+                floatingWindow.Owner = mainWindow;
+            }
 
             var floatingBar = new UndockableToolBar
             {

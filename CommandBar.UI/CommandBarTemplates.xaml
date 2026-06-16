@@ -4,6 +4,7 @@
 
     <DataTemplate DataType="{x:Type models:CommandItem}">
         <Button Command="{Binding ExecuteItemCommand}" 
+                Focusable="False"
                 ToolTip="{Binding Tooltip}"
                 Margin="1" Padding="4,2"
                 Background="Transparent" BorderThickness="0">
@@ -22,6 +23,7 @@
     <DataTemplate DataType="{x:Type models:CommandToggleItem}">
         <ToggleButton IsChecked="{Binding IsChecked, Mode=TwoWay}"
                       Command="{Binding ExecuteItemCommand}" 
+                      Focusable="False"
                       ToolTip="{Binding Tooltip}"
                       Margin="1" Padding="4,2"
                       Background="Transparent" BorderThickness="0">
@@ -43,7 +45,7 @@
 
     <DataTemplate DataType="{x:Type models:CommandDropdownItem}">
         <Menu Background="Transparent">
-            <MenuItem Header="{Binding Text}" ItemsSource="{Binding ChildItems}" ToolTip="{Binding Tooltip}" Padding="4">
+            <MenuItem Header="{Binding Text}" Focusable="False" ItemsSource="{Binding ChildItems}" ToolTip="{Binding Tooltip}" Padding="4">
                 <MenuItem.Icon>
                     <Viewbox Width="16" Height="16">
                         <Path Data="{Binding IconGeometry}" Fill="Black" Stretch="Uniform" />
