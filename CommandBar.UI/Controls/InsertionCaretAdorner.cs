@@ -19,8 +19,12 @@ namespace CommandBar.UI.Controls
 
         public void UpdatePosition(Point newPoint)
         {
-            _insertionPoint = newPoint;
-            InvalidateVisual(); // Forces WPF to redraw the Adorner
+            // Only force a UI redraw if the math calculated a new physical location
+            if (_insertionPoint != newPoint)
+            {
+                _insertionPoint = newPoint;
+                InvalidateVisual();
+            }
         }
 
         protected override void OnRender(DrawingContext drawingContext)

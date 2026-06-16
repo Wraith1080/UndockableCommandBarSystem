@@ -310,7 +310,14 @@ namespace CommandBar.UI.Controls
         protected override void OnDragLeave(DragEventArgs e)
         {
             base.OnDragLeave(e);
-            RemoveCaret(); // Erase the line if they drag the mouse out of the toolbar
+
+            // Calculate if the mouse has physically left the boundaries of the toolbar.
+            // If it's still inside, it means we are just moving between internal buttons!
+            Point pos = e.GetPosition(this);
+            if (pos.X < 0 || pos.X >= this.ActualWidth || pos.Y < 0 || pos.Y >= this.ActualHeight)
+            {
+                RemoveCaret();
+            }
         }
 
         protected override void OnDrop(DragEventArgs e)
