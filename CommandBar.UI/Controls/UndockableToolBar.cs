@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Input;
 
 namespace CommandBar.UI.Controls
 {
-    public class UndockableToolBar : ItemsControl
+    public class UndockableToolBar : ToolBar
     {
         private UIElement? _dragGrip;
         private bool _isDragging;

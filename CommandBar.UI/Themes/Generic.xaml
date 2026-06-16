@@ -4,51 +4,51 @@
     xmlns:controls="clr-namespace:CommandBar.UI.Controls"
     xmlns:local="clr-namespace:CommandBar.UI">
     <Style TargetType="{x:Type controls:UndockableToolBar}">
-
-        <Setter Property="ItemsPanel">
-            <Setter.Value>
-                <ItemsPanelTemplate>
-                    <StackPanel Orientation="Horizontal" IsItemsHost="True" />
-                </ItemsPanelTemplate>
-            </Setter.Value>
-        </Setter>
-
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type controls:UndockableToolBar}">
-                    <Border Background="#F3F3F3" 
-                        BorderBrush="#D4D4D4" 
-                        BorderThickness="1" 
-                        CornerRadius="2" 
-                        Margin="2" 
-                        Padding="2">
+                    <Border Background="#F3F3F3" BorderBrush="#D4D4D4" BorderThickness="1" CornerRadius="2" Margin="2" Padding="2">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <Border x:Name="PART_DragGrip" 
-                                Grid.Column="0" 
-                                Width="10" 
-                                Margin="0,2,6,2" 
-                                Background="Transparent" 
-                                Cursor="SizeAll" 
-                                ToolTip="Drag to undock">
-
+                            <Border x:Name="PART_DragGrip" Grid.Column="0" Width="10" Margin="0,2,6,2" Background="Transparent" Cursor="SizeAll" ToolTip="Drag to undock">
                                 <Path Data="M 2,2 A 1,1 0 1,1 2,2.01 M 2,6 A 1,1 0 1,1 2,6.01 M 2,10 A 1,1 0 1,1 2,10.01 M 6,2 A 1,1 0 1,1 6,2.01 M 6,6 A 1,1 0 1,1 6,6.01 M 6,10 A 1,1 0 1,1 6,10.01" 
-                                  Stroke="Gray" 
-                                  StrokeThickness="2" 
-                                  StrokeDashArray="0,0" 
-                                  Fill="Gray" 
-                                  Stretch="None" 
-                                  VerticalAlignment="Center" 
-                                  HorizontalAlignment="Center" />
+                                  Stroke="Gray" StrokeThickness="2" StrokeDashArray="0,0" Fill="Gray" Stretch="None" VerticalAlignment="Center" HorizontalAlignment="Center" />
                             </Border>
 
-                            <ItemsPresenter Grid.Column="1" VerticalAlignment="Center" />
+                            <ToolBarPanel x:Name="PART_ToolBarPanel" Grid.Column="1" IsItemsHost="True" Margin="0,0,4,0" />
+
+                            <ToggleButton x:Name="PART_OverflowButton" Grid.Column="2" 
+                                      IsChecked="{Binding IsOverflowOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                      Padding="4,0" Background="Transparent" BorderThickness="0" Cursor="Hand">
+                                <Path Data="M 0,0 L 4,4 L 8,0" Stroke="#555555" StrokeThickness="2" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                            </ToggleButton>
+
+                            <Popup x:Name="PART_OverflowPopup" 
+                               AllowsTransparency="True" 
+                               Placement="Bottom" 
+                               PlacementTarget="{Binding ElementName=PART_OverflowButton}"
+                               IsOpen="{Binding IsOverflowOpen, RelativeSource={RelativeSource TemplatedParent}}" 
+                               StaysOpen="False" 
+                               Focusable="False">
+                                <Border Background="#FAFAFA" BorderBrush="#D4D4D4" BorderThickness="1" Padding="4" Margin="0,2,0,0">
+                                    <ToolBarOverflowPanel x:Name="PART_ToolBarOverflowPanel" 
+                                                      KeyboardNavigation.TabNavigation="Cycle" 
+                                                      KeyboardNavigation.DirectionalNavigation="Cycle" />
+                                </Border>
+                            </Popup>
                         </Grid>
                     </Border>
+
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="HasOverflowItems" Value="False">
+                            <Setter TargetName="PART_OverflowButton" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

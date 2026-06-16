@@ -45,6 +45,18 @@ namespace CommandBar.DemoApp
             MainToolbar.DockedItems.Add(btnSave);
             MainToolbar.DockedItems.Add(separator);
             MainToolbar.DockedItems.Add(btnBold);
+
+            // NEW: Spam the toolbar with extra buttons to test the overflow limit!
+            for (int i = 1; i <= 15; i++)
+            {
+                var extraBtn = new CommandItem
+                {
+                    Text = $"Tool {i}",
+                    IconGeometry = saveIconPath // Just reuse the save icon for testing
+                };
+                Manager.RegisterCommand(extraBtn);
+                MainToolbar.DockedItems.Add(extraBtn);
+            }
         }
     }
 }
