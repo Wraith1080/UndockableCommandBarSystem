@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
 
 namespace CommandBar.UI.Controls
@@ -10,6 +11,9 @@ namespace CommandBar.UI.Controls
         private UIElement? _dragGrip;
         private bool _isDragging;
         private Point _startMousePosition;
+
+        // NEW: Keep track of the active ghost so we can remove it later
+        private DockingGhostAdorner? _currentAdorner;
 
         public static readonly DependencyProperty TearOffOffsetXProperty =
             DependencyProperty.Register(nameof(TearOffOffsetX), typeof(double), typeof(UndockableToolBar), new PropertyMetadata(10.0));
@@ -57,9 +61,17 @@ namespace CommandBar.UI.Controls
             {
                 if (e.ButtonState == MouseButtonState.Pressed)
                 {
-                    floatingWindow.DragMove(); // Blocks until mouse is released
+                    // NEW: Hook the movement event
+                    floatingWindow.LocationChanged += FloatingWindow_LocationChanged;
 
-                    // NEW: Check if the user dropped the window over a docking zone
+                    floatingWindow.DragMove();
+
+                    // NEW: Unhook the event when they let go of the mouse
+                    floatingWindow.LocationChanged -= FloatingWindow_LocationChanged;
+
+                    // NEW: Ensure we clean up the visual ghost when dropping
+                    ClearGhostAdorner();
+
                     floatingWindow.OriginalToolBar?.CheckForRedock(floatingWindow);
                 }
                 return;
@@ -123,9 +135,13 @@ namespace CommandBar.UI.Controls
 
             if (Mouse.LeftButton == MouseButtonState.Pressed)
             {
+                // NEW: Wire up the initial tear-off drag as well
+                floatingWindow.LocationChanged += FloatingWindow_LocationChanged;
+
                 floatingWindow.DragMove();
 
-                // NEW: If they immediately drop it after tearing off, check for redock
+                floatingWindow.LocationChanged -= FloatingWindow_LocationChanged;
+                ClearGhostAdorner();
                 CheckForRedock(floatingWindow);
             }
         }
@@ -148,6 +164,63 @@ namespace CommandBar.UI.Controls
                 // Snap it back! Destroy the floating window and reveal the original.
                 floatingWindow.Close();
                 this.Visibility = Visibility.Visible;
+            }
+        }
+
+        // NEW: Event handler that fires continuously while the floating window is dragged
+        private void FloatingWindow_LocationChanged(object? sender, EventArgs e)
+        {
+            if (sender is FloatingToolBarWindow floatingWindow && floatingWindow.OriginalToolBar != null)
+            {
+                floatingWindow.OriginalToolBar.UpdateGhostAdorner(floatingWindow);
+            }
+        }
+
+        // NEW: The logic that decides whether to show or hide the ghost
+        public void UpdateGhostAdorner(FloatingToolBarWindow floatingWindow)
+        {
+            var mainWindow = Window.GetWindow(this);
+            if (mainWindow == null) return;
+
+            // We use the exact same Hit-Test logic from our CheckForRedock method
+            Point mousePos = Mouse.GetPosition(mainWindow);
+            bool isOverDockZone = mousePos.Y >= -20 && mousePos.Y <= 50 &&
+                                  mousePos.X >= -20 && mousePos.X <= mainWindow.ActualWidth + 20;
+
+            if (isOverDockZone)
+            {
+                if (_currentAdorner == null)
+                {
+                    // Find the master AdornerLayer of the main application window
+                    var adornerLayer = AdornerLayer.GetAdornerLayer(mainWindow);
+                    if (adornerLayer != null)
+                    {
+                        // Calculate how big the ghost should be (e.g., full width of the main window)
+                        double barHeight = this.ActualHeight > 0 ? this.ActualHeight : 32;
+                        Rect dockRect = new Rect(0, 0, mainWindow.ActualWidth, barHeight);
+
+                        _currentAdorner = new DockingGhostAdorner(mainWindow, dockRect);
+                        adornerLayer.Add(_currentAdorner);
+                    }
+                }
+            }
+            else
+            {
+                ClearGhostAdorner(); // We left the zone, erase the ghost
+            }
+        }
+
+        private void ClearGhostAdorner()
+        {
+            if (_currentAdorner != null)
+            {
+                var mainWindow = Window.GetWindow(this);
+                if (mainWindow != null)
+                {
+                    var adornerLayer = AdornerLayer.GetAdornerLayer(mainWindow);
+                    adornerLayer?.Remove(_currentAdorner);
+                }
+                _currentAdorner = null;
             }
         }
     }
