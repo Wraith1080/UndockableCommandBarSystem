@@ -8,6 +8,20 @@ namespace CommandBar.UI.Controls
 {
     public class FloatingToolBarWindow : Window
     {
+
+        [DllImport("user32.dll")]
+        private static extern bool GetCursorPos(out POINT lpPoint);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct POINT
+        {
+            public int X;
+            public int Y;
+        }
+
+        private bool _isInitialManualDrag;
+        private double _dragOffsetX;
+        private double _dragOffsetY;
         public UndockableToolBar? OriginalToolBar { get; set; }
 
         // Existing Mouse Constants
@@ -41,7 +55,6 @@ namespace CommandBar.UI.Controls
             AllowsTransparency = true;
             Background = System.Windows.Media.Brushes.Transparent;
             SizeToContent = SizeToContent.WidthAndHeight;
-            Topmost = true;
             ShowInTaskbar = false;
             ShowActivated = false;
 
@@ -91,6 +104,55 @@ namespace CommandBar.UI.Controls
             {
                 // 3. REPLACE WPF's DragMove() WITH OUR CUSTOM METHOD
                 NoActivateDragMove(); 
+                OriginalToolBar?.CheckForRedock(this);
+            }
+        }
+        // This method is called ONLY during the first tear-off
+        public void StartInitialManualDrag(double offsetX, double offsetY)
+        {
+            _isInitialManualDrag = true;
+            _dragOffsetX = offsetX;
+            _dragOffsetY = offsetY;
+
+            // Capture the mouse to this window so we can track the drag smoothly
+            this.CaptureMouse();
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            base.OnMouseMove(e);
+
+            if (_isInitialManualDrag)
+            {
+                GetCursorPos(out POINT p);
+
+                // NEW: Translate physical Win32 pixels back into logical WPF pixels for high-DPI monitors!
+                Point logicalPos = new Point(p.X, p.Y);
+                var source = PresentationSource.FromVisual(this);
+                if (source?.CompositionTarget != null)
+                {
+                    logicalPos = source.CompositionTarget.TransformFromDevice.Transform(logicalPos);
+                }
+
+                // Apply the mathematically corrected coordinates
+                this.Left = logicalPos.X - _dragOffsetX;
+                this.Top = logicalPos.Y - _dragOffsetY;
+
+                OriginalToolBar?.UpdateGhostAdorner(this);
+            }
+        }
+
+        protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
+        {
+            base.OnMouseLeftButtonUp(e);
+
+            if (_isInitialManualDrag)
+            {
+                // The user let go! End the manual drag and check if we should dock
+                _isInitialManualDrag = false;
+                this.ReleaseMouseCapture();
+
+                OriginalToolBar?.ClearGhostAdorner();
                 OriginalToolBar?.CheckForRedock(this);
             }
         }

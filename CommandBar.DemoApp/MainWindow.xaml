@@ -3,25 +3,30 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:CommandBar.DemoApp"
         xmlns:controls="clr-namespace:CommandBar.UI.Controls;assembly=CommandBar.UI"
-        Title="Undockable CommandBar Test" Height="450" Width="800">
+        Title="Undockable CommandBar System" Height="600" Width="900">
 
     <Window.DataContext>
         <local:MainViewModel />
     </Window.DataContext>
 
-    <AdornerDecorator>
-        <Grid>
-            <DockPanel>
-                <controls:UndockableToolBar DockPanel.Dock="Top" 
+    <Grid>
+        <DockPanel>
+            <ToolBarTray DockPanel.Dock="Top" Background="#F3F3F3">
+
+                <controls:UndockableToolBar Band="0" BandIndex="0" 
                                             ItemsSource="{Binding MainToolbar.DockedItems}" />
 
-                <TextBox AcceptsReturn="True" 
-                         TextWrapping="Wrap" 
-                         Text="Type your document here..." 
-                         Margin="10" 
-                         FontFamily="Consolas" 
-                         FontSize="14"/>
-            </DockPanel>
-        </Grid>
-    </AdornerDecorator>
+                <controls:UndockableToolBar Band="0" BandIndex="1" 
+                                            ItemsSource="{Binding MainToolbar.DockedItems}" />
+
+            </ToolBarTray>
+
+            <TextBox AcceptsReturn="True" 
+                     TextWrapping="Wrap" 
+                     Text="Type your document here..." 
+                     Margin="10" 
+                     FontFamily="Consolas" 
+                     FontSize="14"/>
+        </DockPanel>
+    </Grid>
 </Window>

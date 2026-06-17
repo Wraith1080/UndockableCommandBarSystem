@@ -149,7 +149,13 @@ namespace CommandBar.UI.Controls
                 ItemsSource = this.ItemsSource
             };
 
-            floatingWindow.Content = floatingBar;
+            floatingWindow.Content = new Border
+            {
+                Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(243, 243, 243)), // Light Gray #F3F3F3
+                BorderBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(212, 212, 212)), // Darker Gray #D4D4D4
+                BorderThickness = new Thickness(1),
+                Child = floatingBar
+            };
 
             var mousePos = PointToScreen(Mouse.GetPosition(this));
             var source = PresentationSource.FromVisual(this);
@@ -167,14 +173,13 @@ namespace CommandBar.UI.Controls
 
             if (Mouse.LeftButton == MouseButtonState.Pressed)
             {
-                // NEW: Wire up the initial tear-off drag as well
-                floatingWindow.LocationChanged += FloatingWindow_LocationChanged;
-
-                // REPLACED WPF DRAG
-                floatingWindow.NoActivateDragMove();
-
-                floatingWindow.LocationChanged -= FloatingWindow_LocationChanged;
-                ClearGhostAdorner();
+                // NEW: Start the silent, mathematical WPF drag loop! 
+                // This bypasses Win32 entirely, guaranteeing zero focus theft.
+                floatingWindow.StartInitialManualDrag(TearOffOffsetX, TearOffOffsetY);
+            }
+            else
+            {
+                // Fallback in case they release the mouse instantly
                 CheckForRedock(floatingWindow);
             }
         }
