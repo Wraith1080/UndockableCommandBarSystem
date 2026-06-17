@@ -1,25 +1,55 @@
 ﻿{
   "Toolbars": [
     {
+      "Name": "Standard",
+      "Dock": "Top",
+      "Band": 1,
+      "BandIndex": 0,
+      "IsMenuBar": false,
+      "Items": [
+        "App.New",
+        "App.Open",
+        "App.Save",
+        "App.SaveAs"
+      ]
+    },
+    {
+      "Name": "Edit",
+      "Dock": "Top",
+      "Band": 1,
+      "BandIndex": 1,
+      "IsMenuBar": false,
+      "Items": [
+        "App.Cut",
+        "App.Copy",
+        "App.PasteMenu",
+        "App.Separator",
+        "App.Undo",
+        "App.Redo"
+      ]
+    },
+    {
+      "Name": "Formatting",
+      "Dock": "Top",
+      "Band": 1,
+      "BandIndex": 1,
+      "IsMenuBar": false,
+      "Items": [
+        "App.Bold",
+        "App.Italic",
+        "App.Underline"
+      ]
+    },
+    {
       "Name": "Main Menu",
       "Dock": "Top",
       "Band": 0,
       "BandIndex": 0,
       "IsMenuBar": true,
       "Items": [
-        "App.FileMenu"
-      ]
-    },
-    {
-      "Name": "Standard",
-      "Dock": "Left",
-      "Band": 1,
-      "BandIndex": 0,
-      "IsMenuBar": false,
-      "Items": [
-        "App.Save",
-        "App.Separator",
-        "App.Bold"
+        "Menu.File",
+        "Menu.Edit",
+        "Menu.Format"
       ]
     }
   ]
