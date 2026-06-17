@@ -1,12 +1,13 @@
-﻿using System;
+﻿using CommandBar.Core.Models;
+using System;
+using System.Collections;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Input;
-using System.Collections;
 using System.Windows.Media;
-using CommandBar.Core.Models;
 
 namespace CommandBar.UI.Controls
 {
@@ -21,6 +22,9 @@ namespace CommandBar.UI.Controls
             public int X;
             public int Y;
         }
+
+        // NEW: Controls how close the mouse must be to an edge(in pixels) to trigger docking
+        public double EdgeSnapThreshold { get; set; } = 60.0;
 
         private UIElement? _dragGrip;
         private bool _isDragging;
@@ -454,15 +458,15 @@ namespace CommandBar.UI.Controls
         // NEW: Calculates which zone the mouse is currently hovering over
         private DockLocation CalculateDockZone(Point mousePos, FrameworkElement dockContainer)
         {
-            double edgeThickness = 60; // The "magnetic" snap distance in pixels
+            // USE THE PROPERTY instead of the magic number
+            double edgeThickness = EdgeSnapThreshold;
 
-            // Check the 4 edges
             if (mousePos.Y < edgeThickness) return DockLocation.Top;
             if (mousePos.Y > dockContainer.ActualHeight - edgeThickness) return DockLocation.Bottom;
             if (mousePos.X < edgeThickness) return DockLocation.Left;
             if (mousePos.X > dockContainer.ActualWidth - edgeThickness) return DockLocation.Right;
 
-            return DockLocation.Floating; // Mouse is in the dead center
+            return DockLocation.Floating;
         }
     }
 }
