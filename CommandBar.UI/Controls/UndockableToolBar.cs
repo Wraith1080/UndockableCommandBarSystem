@@ -149,6 +149,8 @@ namespace CommandBar.UI.Controls
                 ItemsSource = this.ItemsSource
             };
 
+            System.Windows.Input.FocusManager.SetIsFocusScope(floatingBar, false);
+
             // CHANGED: Rip out the C# Border. Just assign the bar.
             floatingWindow.Content = floatingBar;
 
@@ -295,7 +297,6 @@ namespace CommandBar.UI.Controls
 
         private void StartItemDragDrop(Point startPoint)
         {
-            // NEW: Find the original clicked element natively
             if (VisualTreeHelper.HitTest(this, startPoint)?.VisualHit is not DependencyObject hit) return;
 
             var container = ItemsControl.ContainerFromElement(this, hit) as ContentPresenter;
@@ -304,7 +305,12 @@ namespace CommandBar.UI.Controls
             var dataItem = this.ItemContainerGenerator.ItemFromContainer(container);
             if (dataItem == null) return;
 
-            DragDrop.DoDragDrop(container, new DataObject("CommandItemFormat", dataItem), DragDropEffects.Move);
+            // NEW: Package BOTH the item and its source collection into the drag payload
+            var dataObj = new DataObject();
+            dataObj.SetData("CommandItemFormat", dataItem);
+            dataObj.SetData("SourceListFormat", this.ItemsSource); // Pass the original list!
+
+            DragDrop.DoDragDrop(container, dataObj, DragDropEffects.Move);
 
             RemoveCaret();
         }
@@ -345,23 +351,31 @@ namespace CommandBar.UI.Controls
             base.OnDrop(e);
             RemoveCaret();
 
+            // Extract the item AND the source list from the payload
             var draggedData = e.Data.GetData("CommandItemFormat") as CommandItem;
-            if (draggedData == null || this.ItemsSource is not IList list) return;
+            var sourceList = e.Data.GetData("SourceListFormat") as System.Collections.IList;
 
-            // NEW: Use the math engine to find the drop index
+            if (draggedData == null || this.ItemsSource is not System.Collections.IList targetList) return;
+
             int insertIndex = CalculateInsertionState(e.GetPosition(this), out _);
-            int oldIndex = list.IndexOf(draggedData);
 
-            if (oldIndex != -1 && oldIndex != insertIndex)
+            // NEW: Decide if this is an internal shuffle or a cross-toolbar steal
+            if (sourceList == targetList)
             {
-                if (oldIndex < insertIndex) insertIndex--;
-
-                list.RemoveAt(oldIndex);
-                list.Insert(insertIndex, draggedData);
+                // It's the same toolbar. Just shuffle the index.
+                int oldIndex = targetList.IndexOf(draggedData);
+                if (oldIndex != -1 && oldIndex != insertIndex)
+                {
+                    if (oldIndex < insertIndex) insertIndex--;
+                    targetList.RemoveAt(oldIndex);
+                    targetList.Insert(insertIndex, draggedData);
+                }
             }
-            else if (oldIndex == -1)
+            else
             {
-                list.Insert(insertIndex, draggedData);
+                // It's a DIFFERENT toolbar! Steal it from the source list.
+                sourceList?.Remove(draggedData);
+                targetList.Insert(insertIndex, draggedData);
             }
 
             e.Handled = true;

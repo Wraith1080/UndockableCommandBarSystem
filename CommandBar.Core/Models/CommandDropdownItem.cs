@@ -2,15 +2,28 @@
 
 namespace CommandBar.Core.Models
 {
-    public partial class CommandDropdownItem : CommandItem
+    public class CommandDropdownItem : CommandItem
     {
-        // Holds the child items (which can be standard buttons, toggles, or even more dropdowns)
-        public ObservableCollection<CommandItem> ChildItems { get; } = new ObservableCollection<CommandItem>();
+        public ObservableCollection<CommandItem> ChildItems { get; } = new();
 
-        public CommandDropdownItem()
-    {
-            // Dropdowns usually don't have a direct click action that executes a command, 
-            // they just open the flyout menu containing the ChildItems.
+        public override CommandItem Clone()
+        {
+            var clone = new CommandDropdownItem
+            {
+                Id = this.Id,
+                Text = this.Text,
+                Tooltip = this.Tooltip,
+                IconGeometry = this.IconGeometry,
+                ActionCallback = this.ActionCallback
+            };
+
+            // CRITICAL: Recursively clone every child item inside the menu!
+            foreach (var child in this.ChildItems)
+            {
+                clone.ChildItems.Add(child.Clone());
+            }
+
+            return clone;
         }
     }
 }

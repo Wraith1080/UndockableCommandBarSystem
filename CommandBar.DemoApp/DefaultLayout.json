@@ -1,0 +1,23 @@
+﻿{
+  "Toolbars": [
+    {
+      "Name": "Standard",
+      "Band": 0,
+      "BandIndex": 0,
+      "Items": [
+        "App.Save",
+        "App.Separator",
+        "App.Bold"
+      ]
+    },
+    {
+      "Name": "Extended",
+      "Band": 1,
+      "BandIndex": 0,
+      "Items": [
+        "App.Save",
+        "App.Bold"
+      ]
+    }
+  ]
+}

@@ -11,14 +11,8 @@
 
     <Grid>
         <DockPanel>
-            <ToolBarTray DockPanel.Dock="Top" Background="#F3F3F3">
-
-                <controls:UndockableToolBar Band="0" BandIndex="0" 
-                                            ItemsSource="{Binding MainToolbar.DockedItems}" />
-
-                <controls:UndockableToolBar Band="0" BandIndex="1" 
-                                            ItemsSource="{Binding FormattingToolbar.DockedItems}" />
-
+            <ToolBarTray DockPanel.Dock="Top" Background="#F3F3F3"
+                         controls:ToolBarTrayBehavior.ItemsSource="{Binding Toolbars}">
             </ToolBarTray>
 
             <TextBox AcceptsReturn="True" 
