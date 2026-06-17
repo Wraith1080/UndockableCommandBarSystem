@@ -8,59 +8,33 @@ namespace CommandBar.UI.Controls
 {
     public class FloatingToolBarWindow : Window
     {
-
-        [DllImport("user32.dll")]
-        private static extern bool GetCursorPos(out POINT lpPoint);
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct POINT
-        {
-            public int X;
-            public int Y;
-        }
-
-        private bool _isInitialManualDrag;
-        private double _dragOffsetX;
-        private double _dragOffsetY;
         public UndockableToolBar? OriginalToolBar { get; set; }
 
-        // Existing Mouse Constants
         private const int WM_MOUSEACTIVATE = 0x0021;
         private const int MA_NOACTIVATE = 3;
-
-        // NEW: Window Style Constants
         private const int GWL_EXSTYLE = -20;
         private const int WS_EX_NOACTIVATE = 0x08000000;
 
-        // NEW: Win32 API Imports
         [DllImport("user32.dll")]
         private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
 
         [DllImport("user32.dll")]
         private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
-        // --- 1. NEW NATIVE DRAG IMPORTS ---
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        private static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
-
         [DllImport("user32.dll")]
-        private static extern bool ReleaseCapture();
+        private static extern bool GetCursorPos(out POINT lpPoint);
 
-        private const int WM_NCLBUTTONDOWN = 0xA1;
-        private const int HT_CAPTION = 0x2;
+        [StructLayout(LayoutKind.Sequential)]
+        private struct POINT { public int X; public int Y; }
 
-
-        // 1. NEW: Static constructor to link to Generic.xaml
         static FloatingToolBarWindow()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(
-                typeof(FloatingToolBarWindow),
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(FloatingToolBarWindow),
                 new FrameworkPropertyMetadata(typeof(FloatingToolBarWindow)));
         }
+
         public FloatingToolBarWindow()
         {
-            // 2. CHANGED: Removed visual properties (Background, AllowsTransparency, etc.)
-            // We will let XAML handle all the styling.
             ShowInTaskbar = false;
             ShowActivated = false;
             Focusable = false;
@@ -69,16 +43,11 @@ namespace CommandBar.UI.Controls
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
-
-            // NEW: Get the raw OS window handle (HWND)
             var hwnd = new WindowInteropHelper(this).Handle;
-
-            // Apply the WS_EX_NOACTIVATE extended style
             int exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
             SetWindowLong(hwnd, GWL_EXSTYLE, exStyle | WS_EX_NOACTIVATE);
 
-            // Keep the mouse hook as a backup for internal WPF routing
-            var source = PresentationSource.FromVisual(this) as HwndSource;
+            var source = HwndSource.FromHwnd(hwnd);
             source?.AddHook(WndProc);
         }
 
@@ -92,13 +61,18 @@ namespace CommandBar.UI.Controls
             return IntPtr.Zero;
         }
 
-        // --- 2. NEW SILENT DRAG ENGINE ---
-        public void NoActivateDragMove()
+        // --- THE UNIFIED WPF DRAG ENGINE ---
+
+        private bool _isManualDragging;
+        private double _dragOffsetX;
+        private double _dragOffsetY;
+
+        public void StartManualDrag(double offsetX, double offsetY)
         {
-            var hwnd = new WindowInteropHelper(this).Handle;
-            ReleaseCapture(); // Drop WPF's mouse capture
-            // Trick the OS into thinking we clicked the title bar natively
-            SendMessage(hwnd, WM_NCLBUTTONDOWN, (IntPtr)HT_CAPTION, IntPtr.Zero); 
+            _isManualDragging = true;
+            _dragOffsetX = offsetX;
+            _dragOffsetY = offsetY;
+            this.CaptureMouse(); // Lock mouse events to this window
         }
 
         protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
@@ -106,31 +80,19 @@ namespace CommandBar.UI.Controls
             base.OnMouseLeftButtonDown(e);
             if (e.ButtonState == MouseButtonState.Pressed)
             {
-                // 3. REPLACE WPF's DragMove() WITH OUR CUSTOM METHOD
-                NoActivateDragMove(); 
-                OriginalToolBar?.CheckForRedock(this);
+                // NO MORE WIN32 DRAG! Find where they clicked and start the math drag
+                Point clickPos = e.GetPosition(this);
+                StartManualDrag(clickPos.X, clickPos.Y);
             }
-        }
-        // This method is called ONLY during the first tear-off
-        public void StartInitialManualDrag(double offsetX, double offsetY)
-        {
-            _isInitialManualDrag = true;
-            _dragOffsetX = offsetX;
-            _dragOffsetY = offsetY;
-
-            // Capture the mouse to this window so we can track the drag smoothly
-            this.CaptureMouse();
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
 
-            if (_isInitialManualDrag)
+            if (_isManualDragging)
             {
                 GetCursorPos(out POINT p);
-
-                // NEW: Translate physical Win32 pixels back into logical WPF pixels for high-DPI monitors!
                 Point logicalPos = new Point(p.X, p.Y);
                 var source = PresentationSource.FromVisual(this);
                 if (source?.CompositionTarget != null)
@@ -138,7 +100,6 @@ namespace CommandBar.UI.Controls
                     logicalPos = source.CompositionTarget.TransformFromDevice.Transform(logicalPos);
                 }
 
-                // Apply the mathematically corrected coordinates
                 this.Left = logicalPos.X - _dragOffsetX;
                 this.Top = logicalPos.Y - _dragOffsetY;
 
@@ -150,10 +111,10 @@ namespace CommandBar.UI.Controls
         {
             base.OnMouseLeftButtonUp(e);
 
-            if (_isInitialManualDrag)
+            if (_isManualDragging)
             {
-                // The user let go! End the manual drag and check if we should dock
-                _isInitialManualDrag = false;
+                // Drag is finished! Release mouse and check if we should dock.
+                _isManualDragging = false;
                 this.ReleaseMouseCapture();
 
                 OriginalToolBar?.ClearGhostAdorner();

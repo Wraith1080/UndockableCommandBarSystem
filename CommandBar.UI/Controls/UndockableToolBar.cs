@@ -86,17 +86,9 @@ namespace CommandBar.UI.Controls
             {
                 if (e.ButtonState == MouseButtonState.Pressed)
                 {
-                    floatingWindow.LocationChanged += FloatingWindow_LocationChanged;
-
-                    // REPLACED WPF DRAG
-                    floatingWindow.NoActivateDragMove();
-
-                    floatingWindow.LocationChanged -= FloatingWindow_LocationChanged;
-                    
-                    // NEW: Ask the ORIGINAL toolbar to clear the ghost!
-                    floatingWindow.OriginalToolBar?.ClearGhostAdorner();
-
-                    floatingWindow.OriginalToolBar?.CheckForRedock(floatingWindow);
+                    // START THE UNIFIED MATH DRAG
+                    Point clickPos = e.GetPosition(floatingWindow);
+                    floatingWindow.StartManualDrag(clickPos.X, clickPos.Y);
                 }
                 return; 
             }
@@ -170,9 +162,8 @@ namespace CommandBar.UI.Controls
 
             if (Mouse.LeftButton == MouseButtonState.Pressed)
             {
-                // NEW: Start the silent, mathematical WPF drag loop! 
-                // This bypasses Win32 entirely, guaranteeing zero focus theft.
-                floatingWindow.StartInitialManualDrag(TearOffOffsetX, TearOffOffsetY);
+                // Trigger the unified drag loop!
+                floatingWindow.StartManualDrag(TearOffOffsetX, TearOffOffsetY);
             }
             else
             {
