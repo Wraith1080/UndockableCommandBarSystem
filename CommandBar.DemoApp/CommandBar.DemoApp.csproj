@@ -13,4 +13,10 @@
     <ProjectReference Include="..\CommandBar.UI\CommandBar.UI.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="DefaultLayout.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

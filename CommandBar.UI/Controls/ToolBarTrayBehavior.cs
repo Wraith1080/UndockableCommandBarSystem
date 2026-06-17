@@ -52,6 +52,8 @@ namespace CommandBar.UI.Controls
             var toolBar = new UndockableToolBar();
             toolBar.HorizontalAlignment = HorizontalAlignment.Left;
 
+            toolBar.DataContext = model;
+
             toolBar.SetBinding(ToolBar.BandProperty, new Binding("Band") { Source = model, Mode = BindingMode.TwoWay });
             toolBar.SetBinding(ToolBar.BandIndexProperty, new Binding("BandIndex") { Source = model, Mode = BindingMode.TwoWay });
 

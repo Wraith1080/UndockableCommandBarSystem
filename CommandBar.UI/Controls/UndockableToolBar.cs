@@ -28,6 +28,8 @@ namespace CommandBar.UI.Controls
         private Point _itemDragStart;
         private bool _isPreparingToDragItem;
         private InsertionCaretAdorner? _caretAdorner;
+        // NEW: Stores the ghost so we can remove it or update its rotation safely!
+        private DockingGhostAdorner? _ghostAdorner;
 
         public UndockableToolBar()
         {
@@ -183,49 +185,52 @@ namespace CommandBar.UI.Controls
 
         public void CheckForRedock(FloatingToolBarWindow floatingWindow)
         {
-            var mainWindow = Window.GetWindow(this);
-            if (mainWindow == null) return;
+            ClearGhostAdorner();
 
-            // NEW: Get physical OS mouse pixels and translate them to WPF logical window pixels
-            GetCursorPos(out POINT p);
-            Point mousePos = mainWindow.PointFromScreen(new Point(p.X, p.Y));
+            var mainWindow = Application.Current.MainWindow;
+            // THE FIX: Change UIElement to FrameworkElement
+            if (mainWindow == null || mainWindow.Content is not FrameworkElement mainContent) return;
 
-            bool isOverDockZone = mousePos.Y >= -20 && mousePos.Y <= 50 &&
-                                  mousePos.X >= -20 && mousePos.X <= mainWindow.ActualWidth + 20;
+            Point mousePos = Mouse.GetPosition(mainContent);
+            DockLocation targetDock = CalculateDockZone(mousePos, mainContent);
 
-            if (isOverDockZone)
+            if (targetDock != DockLocation.Floating)
             {
+                if (this.DataContext is ToolbarModel model)
+                {
+                    // Because DataContext is now set, this will successfully fire!
+                    model.RequestDockChange(targetDock);
+                }
+
                 floatingWindow.Close();
-                this.Visibility = Visibility.Visible;
             }
         }
 
         public void UpdateGhostAdorner(FloatingToolBarWindow floatingWindow)
         {
-            var mainWindow = Window.GetWindow(this);
-            if (mainWindow == null || mainWindow.Content is not UIElement rootElement) return;
+            var mainWindow = Application.Current.MainWindow;
+            // FIX: Target the Content of the window, not the Window root!
+            // THE FIX: Change UIElement to FrameworkElement
+            if (mainWindow == null || mainWindow.Content is not FrameworkElement mainContent) return;
 
-            // NEW: Get physical OS mouse pixels and translate them to WPF logical window pixels
-            GetCursorPos(out POINT p);
-            Point mousePos = mainWindow.PointFromScreen(new Point(p.X, p.Y));
+            Point mousePos = Mouse.GetPosition(mainContent);
+            DockLocation targetDock = CalculateDockZone(mousePos, mainContent);
 
-            bool isOverDockZone = mousePos.Y >= -20 && mousePos.Y <= 50 &&
-                                  mousePos.X >= -20 && mousePos.X <= mainWindow.ActualWidth + 20;
-
-            if (isOverDockZone)
+            if (targetDock != DockLocation.Floating)
             {
-                if (_currentAdorner == null)
+                if (_ghostAdorner == null)
                 {
-                    var adornerLayer = AdornerLayer.GetAdornerLayer(rootElement);
-                    if (adornerLayer != null)
+                    // Now that we are starting at the Content, WPF will successfully find the Adorner Layer!
+                    var layer = AdornerLayer.GetAdornerLayer(mainContent);
+                    if (layer != null)
                     {
-                        double barHeight = this.ActualHeight > 0 ? this.ActualHeight : 32;
-                        Rect dockRect = new Rect(0, 0, mainWindow.ActualWidth, barHeight);
-
-                        _currentAdorner = new DockingGhostAdorner(rootElement, dockRect);
-                        adornerLayer.Add(_currentAdorner);
+                        // Attach the ghost to the Content frame
+                        _ghostAdorner = new DockingGhostAdorner(mainContent);
+                        layer.Add(_ghostAdorner);
                     }
                 }
+
+                _ghostAdorner?.UpdateTargetDock(targetDock);
             }
             else
             {
@@ -244,16 +249,15 @@ namespace CommandBar.UI.Controls
 
         public void ClearGhostAdorner()
         {
-            if (_currentAdorner != null)
+            if (_ghostAdorner != null)
             {
-                var mainWindow = Window.GetWindow(this);
-                // NEW: Ensure we clear it from the correct layer
-                if (mainWindow?.Content is UIElement rootElement)
+                var mainWindow = Application.Current.MainWindow;
+                if (mainWindow?.Content is UIElement mainContent)
                 {
-                    var adornerLayer = AdornerLayer.GetAdornerLayer(rootElement);
-                    adornerLayer?.Remove(_currentAdorner);
+                    var layer = AdornerLayer.GetAdornerLayer(mainContent);
+                    layer?.Remove(_ghostAdorner);
                 }
-                _currentAdorner = null;
+                _ghostAdorner = null;
             }
         }
 
@@ -446,6 +450,19 @@ namespace CommandBar.UI.Controls
                 AdornerLayer.GetAdornerLayer(this)?.Remove(_caretAdorner);
                 _caretAdorner = null;
             }
+        }
+        // NEW: Calculates which zone the mouse is currently hovering over
+        private DockLocation CalculateDockZone(Point mousePos, FrameworkElement dockContainer)
+        {
+            double edgeThickness = 60; // The "magnetic" snap distance in pixels
+
+            // Check the 4 edges
+            if (mousePos.Y < edgeThickness) return DockLocation.Top;
+            if (mousePos.Y > dockContainer.ActualHeight - edgeThickness) return DockLocation.Bottom;
+            if (mousePos.X < edgeThickness) return DockLocation.Left;
+            if (mousePos.X > dockContainer.ActualWidth - edgeThickness) return DockLocation.Right;
+
+            return DockLocation.Floating; // Mouse is in the dead center
         }
     }
 }

@@ -11,16 +11,20 @@
 
     <Grid>
         <DockPanel>
-            <ToolBarTray DockPanel.Dock="Top" Background="#F3F3F3"
-                         controls:ToolBarTrayBehavior.ItemsSource="{Binding Toolbars}">
-            </ToolBarTray>
+            <ToolBarTray DockPanel.Dock="Top" Background="#F3F3F3" Orientation="Horizontal"
+                         controls:ToolBarTrayBehavior.ItemsSource="{Binding TopToolbars}" />
 
-            <TextBox AcceptsReturn="True" 
-                     TextWrapping="Wrap" 
-                     Text="Type your document here..." 
-                     Margin="10" 
-                     FontFamily="Consolas" 
-                     FontSize="14"/>
+            <ToolBarTray DockPanel.Dock="Bottom" Background="#F3F3F3" Orientation="Horizontal"
+                         controls:ToolBarTrayBehavior.ItemsSource="{Binding BottomToolbars}" />
+
+            <ToolBarTray DockPanel.Dock="Left" Background="#F3F3F3" Orientation="Vertical"
+                         controls:ToolBarTrayBehavior.ItemsSource="{Binding LeftToolbars}" />
+
+            <ToolBarTray DockPanel.Dock="Right" Background="#F3F3F3" Orientation="Vertical"
+                         controls:ToolBarTrayBehavior.ItemsSource="{Binding RightToolbars}" />
+
+            <TextBox AcceptsReturn="True" TextWrapping="Wrap" Margin="10" FontFamily="Consolas" FontSize="14"
+                     Text="Type your document here..."/>
         </DockPanel>
     </Grid>
 </Window>

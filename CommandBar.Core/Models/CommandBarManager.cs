@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Text.Json; // REQUIRED FOR JSON
 
 namespace CommandBar.Core.Models
@@ -9,9 +10,11 @@ namespace CommandBar.Core.Models
         // THE MASTER REGISTRY: Holds the pure definition of every button/action in the app
         private readonly Dictionary<string, CommandItem> _masterCommandRegistry = new();
 
-        // THE ACTIVE LAYOUT: Holds the toolbars currently visible on the screen
-        private readonly List<ToolbarModel> _activeToolbars = new();
-        public IReadOnlyList<ToolbarModel> ActiveToolbars => _activeToolbars;
+        // REPLACE _activeToolbars WITH THESE 4 LISTS
+        public ObservableCollection<ToolbarModel> TopToolbars { get; } = new();
+        public ObservableCollection<ToolbarModel> BottomToolbars { get; } = new();
+        public ObservableCollection<ToolbarModel> LeftToolbars { get; } = new();
+        public ObservableCollection<ToolbarModel> RightToolbars { get; } = new();
 
         /// <summary>
         /// Registers a command into the master dictionary. 
@@ -43,23 +46,38 @@ namespace CommandBar.Core.Models
         /// <summary>
         /// Creates a new empty toolbar and adds it to the active layout.
         /// </summary>
-        public ToolbarModel CreateToolbar(string name, int row = 0, int index = 0, bool isMenuBar = false)
+        public ToolbarModel CreateToolbar(string name, DockLocation dock = DockLocation.Top, int row = 0, int index = 0, bool isMenuBar = false)
         {
             var toolbar = new ToolbarModel
             {
                 Name = name,
+                DockLocation = dock,
                 Band = row,
                 BandIndex = index,
-                IsMenuBar = isMenuBar // NEW
+                IsMenuBar = isMenuBar
             };
-            _activeToolbars.Add(toolbar);
+
+            toolbar.DockChangeRequested += MoveToolbar;
+
+            // Route the toolbar to the correct UI list!
+            switch (dock)
+            {
+                case DockLocation.Top: TopToolbars.Add(toolbar); break;
+                case DockLocation.Bottom: BottomToolbars.Add(toolbar); break;
+                case DockLocation.Left: LeftToolbars.Add(toolbar); break;
+                case DockLocation.Right: RightToolbars.Add(toolbar); break;
+            }
+
             return toolbar;
         }
 
         // --- NEW: THE JSON DESERIALIZATION ENGINE ---
         public void LoadLayoutFromJson(string jsonString)
         {
-            _activeToolbars.Clear();
+            TopToolbars.Clear();
+            BottomToolbars.Clear();
+            LeftToolbars.Clear();
+            RightToolbars.Clear();
 
             // 1. Read the JSON text into our temporary C# objects
             var layoutOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
@@ -70,7 +88,8 @@ namespace CommandBar.Core.Models
             // 2. Loop through the JSON toolbars
             foreach (var tbConfig in layout.Toolbars)
             {
-                var toolbar = CreateToolbar(tbConfig.Name, tbConfig.Band, tbConfig.BandIndex);
+                Enum.TryParse(tbConfig.Dock, true, out DockLocation parsedDock);
+                var toolbar = CreateToolbar(tbConfig.Name, parsedDock, tbConfig.Band, tbConfig.BandIndex, tbConfig.IsMenuBar);
 
                 // 3. Loop through the string IDs in the JSON
                 foreach (var commandId in tbConfig.Items)
@@ -82,6 +101,25 @@ namespace CommandBar.Core.Models
                         toolbar.DockedItems.Add(commandToInject);
                     }
                 }
+            }
+        }
+
+        // NEW: Plucks the toolbar out of its old list and puts it in the new one!
+        private void MoveToolbar(ToolbarModel toolbar, DockLocation newDock)
+        {
+            TopToolbars.Remove(toolbar);
+            BottomToolbars.Remove(toolbar);
+            LeftToolbars.Remove(toolbar);
+            RightToolbars.Remove(toolbar);
+
+            toolbar.DockLocation = newDock;
+
+            switch (newDock)
+            {
+                case DockLocation.Top: TopToolbars.Add(toolbar); break;
+                case DockLocation.Bottom: BottomToolbars.Add(toolbar); break;
+                case DockLocation.Left: LeftToolbars.Add(toolbar); break;
+                case DockLocation.Right: RightToolbars.Add(toolbar); break;
             }
         }
     }
@@ -97,8 +135,8 @@ namespace CommandBar.Core.Models
         public string Name { get; set; } = string.Empty;
         public int Band { get; set; }
         public int BandIndex { get; set; }
+        public bool IsMenuBar { get; set; }
+        public string Dock { get; set; } = "Top"; // NEW: JSON will pass "Top", "Left", etc.
         public List<string> Items { get; set; } = new();
-
-        public bool IsMenuBar { get; set; } // NEW
     }
 }

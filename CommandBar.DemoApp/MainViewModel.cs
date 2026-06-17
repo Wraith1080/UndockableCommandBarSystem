@@ -1,8 +1,9 @@
-﻿using System.IO;
-using System.Windows;
-using CommandBar.Core.Models;
+﻿using CommandBar.Core.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Windows;
 
 namespace CommandBar.DemoApp
 {
@@ -11,7 +12,10 @@ namespace CommandBar.DemoApp
         public CommandBarManager Manager { get; } = new();
 
         // Instead of a single Toolbar, the UI will bind to the Manager's list of active toolbars
-        public IReadOnlyList<ToolbarModel> Toolbars => Manager.ActiveToolbars;
+        public ObservableCollection<ToolbarModel> TopToolbars => Manager.TopToolbars;
+        public ObservableCollection<ToolbarModel> BottomToolbars => Manager.BottomToolbars;
+        public ObservableCollection<ToolbarModel> LeftToolbars => Manager.LeftToolbars;
+        public ObservableCollection<ToolbarModel> RightToolbars => Manager.RightToolbars;
 
         public MainViewModel()
         {

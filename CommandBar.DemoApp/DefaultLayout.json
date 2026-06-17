@@ -1,21 +1,24 @@
 ﻿{
   "Toolbars": [
     {
-      "Name": "Standard",
+      "Name": "Main Menu",
+      "Dock": "Top",
       "Band": 0,
       "BandIndex": 0,
+      "IsMenuBar": true,
       "Items": [
-        "App.Save",
-        "App.Separator",
-        "App.Bold"
+        "App.FileMenu"
       ]
     },
     {
-      "Name": "Extended",
+      "Name": "Standard",
+      "Dock": "Left",
       "Band": 1,
       "BandIndex": 0,
+      "IsMenuBar": false,
       "Items": [
         "App.Save",
+        "App.Separator",
         "App.Bold"
       ]
     }

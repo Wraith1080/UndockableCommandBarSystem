@@ -20,7 +20,19 @@ namespace CommandBar.Core.Models
         [ObservableProperty]
         private bool _isMenuBar;
 
+        // NEW: Tracks which side of the screen this toolbar lives on
+        [ObservableProperty]
+        private DockLocation _dockLocation = DockLocation.Top;
+
         // The actual buttons currently sitting inside this specific toolbar
         public ObservableCollection<CommandItem> DockedItems { get; } = new();
+
+        // NEW: An event to tell the Manager that this toolbar wants to move!
+        public event Action<ToolbarModel, DockLocation>? DockChangeRequested;
+
+        public void RequestDockChange(DockLocation newDock)
+        {
+            DockChangeRequested?.Invoke(this, newDock);
+        }
     }
 }
