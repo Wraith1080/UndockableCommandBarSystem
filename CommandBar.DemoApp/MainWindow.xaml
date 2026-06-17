@@ -17,7 +17,7 @@
                                             ItemsSource="{Binding MainToolbar.DockedItems}" />
 
                 <controls:UndockableToolBar Band="0" BandIndex="1" 
-                                            ItemsSource="{Binding MainToolbar.DockedItems}" />
+                                            ItemsSource="{Binding FormattingToolbar.DockedItems}" />
 
             </ToolBarTray>
 

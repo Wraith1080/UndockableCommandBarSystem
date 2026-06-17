@@ -149,13 +149,8 @@ namespace CommandBar.UI.Controls
                 ItemsSource = this.ItemsSource
             };
 
-            floatingWindow.Content = new Border
-            {
-                Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(243, 243, 243)), // Light Gray #F3F3F3
-                BorderBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(212, 212, 212)), // Darker Gray #D4D4D4
-                BorderThickness = new Thickness(1),
-                Child = floatingBar
-            };
+            // CHANGED: Rip out the C# Border. Just assign the bar.
+            floatingWindow.Content = floatingBar;
 
             var mousePos = PointToScreen(Mouse.GetPosition(this));
             var source = PresentationSource.FromVisual(this);

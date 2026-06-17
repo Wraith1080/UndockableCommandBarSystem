@@ -49,16 +49,20 @@ namespace CommandBar.UI.Controls
         private const int WM_NCLBUTTONDOWN = 0xA1;
         private const int HT_CAPTION = 0x2;
 
+
+        // 1. NEW: Static constructor to link to Generic.xaml
+        static FloatingToolBarWindow()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(
+                typeof(FloatingToolBarWindow),
+                new FrameworkPropertyMetadata(typeof(FloatingToolBarWindow)));
+        }
         public FloatingToolBarWindow()
         {
-            WindowStyle = WindowStyle.None;
-            AllowsTransparency = true;
-            Background = System.Windows.Media.Brushes.Transparent;
-            SizeToContent = SizeToContent.WidthAndHeight;
+            // 2. CHANGED: Removed visual properties (Background, AllowsTransparency, etc.)
+            // We will let XAML handle all the styling.
             ShowInTaskbar = false;
             ShowActivated = false;
-
-            // NEW: Prevent WPF from even trying to put keyboard focus in this window
             Focusable = false;
         }
 
