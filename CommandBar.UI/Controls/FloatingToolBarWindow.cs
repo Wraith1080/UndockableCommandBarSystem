@@ -25,6 +25,16 @@ namespace CommandBar.UI.Controls
         [DllImport("user32.dll")]
         private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
+        // --- 1. NEW NATIVE DRAG IMPORTS ---
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        private static extern bool ReleaseCapture();
+
+        private const int WM_NCLBUTTONDOWN = 0xA1;
+        private const int HT_CAPTION = 0x2;
+
         public FloatingToolBarWindow()
         {
             WindowStyle = WindowStyle.None;
@@ -65,12 +75,22 @@ namespace CommandBar.UI.Controls
             return IntPtr.Zero;
         }
 
+        // --- 2. NEW SILENT DRAG ENGINE ---
+        public void NoActivateDragMove()
+        {
+            var hwnd = new WindowInteropHelper(this).Handle;
+            ReleaseCapture(); // Drop WPF's mouse capture
+            // Trick the OS into thinking we clicked the title bar natively
+            SendMessage(hwnd, WM_NCLBUTTONDOWN, (IntPtr)HT_CAPTION, IntPtr.Zero); 
+        }
+
         protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
         {
             base.OnMouseLeftButtonDown(e);
             if (e.ButtonState == MouseButtonState.Pressed)
             {
-                DragMove();
+                // 3. REPLACE WPF's DragMove() WITH OUR CUSTOM METHOD
+                NoActivateDragMove(); 
                 OriginalToolBar?.CheckForRedock(this);
             }
         }

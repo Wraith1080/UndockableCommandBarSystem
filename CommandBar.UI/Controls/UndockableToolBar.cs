@@ -12,6 +12,16 @@ namespace CommandBar.UI.Controls
 {
     public class UndockableToolBar : ToolBar
     {
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool GetCursorPos(out POINT lpPoint);
+
+        [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+        public struct POINT
+        {
+            public int X;
+            public int Y;
+        }
+
         private UIElement? _dragGrip;
         private bool _isDragging;
         private Point _startMousePosition;
@@ -77,9 +87,10 @@ namespace CommandBar.UI.Controls
                 if (e.ButtonState == MouseButtonState.Pressed)
                 {
                     floatingWindow.LocationChanged += FloatingWindow_LocationChanged;
-                    
-                    floatingWindow.DragMove(); 
-                    
+
+                    // REPLACED WPF DRAG
+                    floatingWindow.NoActivateDragMove();
+
                     floatingWindow.LocationChanged -= FloatingWindow_LocationChanged;
                     
                     // NEW: Ask the ORIGINAL toolbar to clear the ghost!
@@ -159,7 +170,8 @@ namespace CommandBar.UI.Controls
                 // NEW: Wire up the initial tear-off drag as well
                 floatingWindow.LocationChanged += FloatingWindow_LocationChanged;
 
-                floatingWindow.DragMove();
+                // REPLACED WPF DRAG
+                floatingWindow.NoActivateDragMove();
 
                 floatingWindow.LocationChanged -= FloatingWindow_LocationChanged;
                 ClearGhostAdorner();
@@ -167,24 +179,55 @@ namespace CommandBar.UI.Controls
             }
         }
 
-        // NEW METHOD: The Hit-Testing Logic
         public void CheckForRedock(FloatingToolBarWindow floatingWindow)
         {
             var mainWindow = Window.GetWindow(this);
             if (mainWindow == null) return;
 
-            // Get the mouse cursor's exact position relative to the main application window
-            Point mousePos = Mouse.GetPosition(mainWindow);
+            // NEW: Get physical OS mouse pixels and translate them to WPF logical window pixels
+            GetCursorPos(out POINT p);
+            Point mousePos = mainWindow.PointFromScreen(new Point(p.X, p.Y));
 
-            // Define our target "Docking Zone" (e.g., the top 50 pixels of the main window)
             bool isOverDockZone = mousePos.Y >= -20 && mousePos.Y <= 50 &&
                                   mousePos.X >= -20 && mousePos.X <= mainWindow.ActualWidth + 20;
 
             if (isOverDockZone)
             {
-                // Snap it back! Destroy the floating window and reveal the original.
                 floatingWindow.Close();
                 this.Visibility = Visibility.Visible;
+            }
+        }
+
+        public void UpdateGhostAdorner(FloatingToolBarWindow floatingWindow)
+        {
+            var mainWindow = Window.GetWindow(this);
+            if (mainWindow == null || mainWindow.Content is not UIElement rootElement) return;
+
+            // NEW: Get physical OS mouse pixels and translate them to WPF logical window pixels
+            GetCursorPos(out POINT p);
+            Point mousePos = mainWindow.PointFromScreen(new Point(p.X, p.Y));
+
+            bool isOverDockZone = mousePos.Y >= -20 && mousePos.Y <= 50 &&
+                                  mousePos.X >= -20 && mousePos.X <= mainWindow.ActualWidth + 20;
+
+            if (isOverDockZone)
+            {
+                if (_currentAdorner == null)
+                {
+                    var adornerLayer = AdornerLayer.GetAdornerLayer(rootElement);
+                    if (adornerLayer != null)
+                    {
+                        double barHeight = this.ActualHeight > 0 ? this.ActualHeight : 32;
+                        Rect dockRect = new Rect(0, 0, mainWindow.ActualWidth, barHeight);
+
+                        _currentAdorner = new DockingGhostAdorner(rootElement, dockRect);
+                        adornerLayer.Add(_currentAdorner);
+                    }
+                }
+            }
+            else
+            {
+                ClearGhostAdorner();
             }
         }
 
@@ -194,39 +237,6 @@ namespace CommandBar.UI.Controls
             if (sender is FloatingToolBarWindow floatingWindow && floatingWindow.OriginalToolBar != null)
             {
                 floatingWindow.OriginalToolBar.UpdateGhostAdorner(floatingWindow);
-            }
-        }
-
-        public void UpdateGhostAdorner(FloatingToolBarWindow floatingWindow)
-        {
-            var mainWindow = Window.GetWindow(this);
-            // NEW: Get the root visual element inside the main window
-            if (mainWindow == null || mainWindow.Content is not UIElement rootElement) return;
-
-            Point mousePos = Mouse.GetPosition(mainWindow);
-            bool isOverDockZone = mousePos.Y >= -20 && mousePos.Y <= 50 &&
-                                  mousePos.X >= -20 && mousePos.X <= mainWindow.ActualWidth + 20;
-
-            if (isOverDockZone)
-            {
-                if (_currentAdorner == null)
-                {
-                    // NEW: Ask WPF to find the AdornerLayer above the ROOT ELEMENT, not the window
-                    var adornerLayer = AdornerLayer.GetAdornerLayer(rootElement);
-                    if (adornerLayer != null)
-                    {
-                        double barHeight = this.ActualHeight > 0 ? this.ActualHeight : 32;
-                        Rect dockRect = new Rect(0, 0, mainWindow.ActualWidth, barHeight);
-
-                        // NEW: We adorn the root element
-                        _currentAdorner = new DockingGhostAdorner(rootElement, dockRect);
-                        adornerLayer.Add(_currentAdorner);
-                    }
-                }
-            }
-            else
-            {
-                ClearGhostAdorner();
             }
         }
 
