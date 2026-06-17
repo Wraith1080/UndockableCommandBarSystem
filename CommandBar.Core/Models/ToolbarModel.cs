@@ -16,6 +16,10 @@ namespace CommandBar.Core.Models
         [ObservableProperty]
         private int _bandIndex;
 
+        // NEW: Tells the UI if this specific toolbar should act as a Main Menu Bar
+        [ObservableProperty]
+        private bool _isMenuBar;
+
         // The actual buttons currently sitting inside this specific toolbar
         public ObservableCollection<CommandItem> DockedItems { get; } = new();
     }

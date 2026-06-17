@@ -17,7 +17,7 @@ namespace CommandBar.Core.Models
                 Tooltip = this.Tooltip,
                 IconGeometry = this.IconGeometry,
                 ActionCallback = this.ActionCallback,
-
+                DisplayMode = this.DisplayMode,
                 // Copy the specific Toggle property
                 IsChecked = this.IsChecked
             };

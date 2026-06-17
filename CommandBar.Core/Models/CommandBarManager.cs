@@ -43,13 +43,14 @@ namespace CommandBar.Core.Models
         /// <summary>
         /// Creates a new empty toolbar and adds it to the active layout.
         /// </summary>
-        public ToolbarModel CreateToolbar(string name, int row = 0, int index = 0)
+        public ToolbarModel CreateToolbar(string name, int row = 0, int index = 0, bool isMenuBar = false)
         {
             var toolbar = new ToolbarModel
             {
                 Name = name,
                 Band = row,
-                BandIndex = index
+                BandIndex = index,
+                IsMenuBar = isMenuBar // NEW
             };
             _activeToolbars.Add(toolbar);
             return toolbar;
@@ -97,5 +98,7 @@ namespace CommandBar.Core.Models
         public int Band { get; set; }
         public int BandIndex { get; set; }
         public List<string> Items { get; set; } = new();
+
+        public bool IsMenuBar { get; set; } // NEW
     }
 }

@@ -46,6 +46,15 @@ namespace CommandBar.UI.Controls
         public static readonly DependencyProperty TearOffOffsetYProperty =
             DependencyProperty.Register(nameof(TearOffOffsetY), typeof(double), typeof(UndockableToolBar), new PropertyMetadata(10.0));
 
+        // NEW: Dependency Property so XAML Triggers can see if this is a MenuBar
+        public static readonly DependencyProperty IsMenuBarProperty =
+            DependencyProperty.Register("IsMenuBar", typeof(bool), typeof(UndockableToolBar), new PropertyMetadata(false));
+
+        public bool IsMenuBar
+        {
+            get { return (bool)GetValue(IsMenuBarProperty); }
+            set { SetValue(IsMenuBarProperty, value); }
+        }
         public double TearOffOffsetX
         {
             get => (double)GetValue(TearOffOffsetXProperty);

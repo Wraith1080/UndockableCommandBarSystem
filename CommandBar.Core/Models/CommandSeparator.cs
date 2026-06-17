@@ -6,7 +6,8 @@
         {
             return new CommandSeparator
             {
-                Id = this.Id
+                Id = this.Id,
+                DisplayMode = this.DisplayMode
             };
         }
     }

@@ -1,13 +1,11 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommandBar.Core.Models;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System;
-
+using System.Windows.Input;
 namespace CommandBar.Core.Models
 {
-    // Inheriting from ObservableObject gives us INotifyPropertyChanged automatically
     public partial class CommandItem : ObservableObject
     {
-        // NEW: The unique string ID (e.g., "App.Save")
         [ObservableProperty]
         private string _id = string.Empty;
 
@@ -18,30 +16,15 @@ namespace CommandBar.Core.Models
         private string _tooltip = string.Empty;
 
         [ObservableProperty]
-        private string _iconGeometry = string.Empty; // Holds Vector Path Data for crisp scaling
+        private string _iconGeometry = string.Empty;
 
+        // NEW: Controls how the UI renders this specific button
         [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(ExecuteItemCommand))]
-        private bool _isEnabled = true;
+        private CommandDisplayMode _displayMode = CommandDisplayMode.ImageAndText;
 
-        [ObservableProperty]
-        private bool _isVisible = true;
-
-        // The actual action to run when clicked
         public Action? ActionCallback { get; set; }
+        public ICommand ExecuteItemCommand => new RelayCommand(() => ActionCallback?.Invoke());
 
-        // The RelayCommand generates our ICommand binding for the WPF UI
-        [RelayCommand(CanExecute = nameof(CanExecuteItem))]
-        private void ExecuteItem()
-        {
-            ActionCallback?.Invoke();
-        }
-
-        private bool CanExecuteItem()
-        {
-            return IsEnabled;
-        }
-        // NEW: A method to safely clone the button for the UI
         public virtual CommandItem Clone()
         {
             return new CommandItem
@@ -50,7 +33,10 @@ namespace CommandBar.Core.Models
                 Text = this.Text,
                 Tooltip = this.Tooltip,
                 IconGeometry = this.IconGeometry,
-                ActionCallback = this.ActionCallback
+                ActionCallback = this.ActionCallback,
+
+                // NEW: Preserve the display mode during cloning!
+                DisplayMode = this.DisplayMode
             };
         }
     }

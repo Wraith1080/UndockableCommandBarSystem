@@ -14,7 +14,8 @@ namespace CommandBar.Core.Models
                 Text = this.Text,
                 Tooltip = this.Tooltip,
                 IconGeometry = this.IconGeometry,
-                ActionCallback = this.ActionCallback
+                ActionCallback = this.ActionCallback,
+                DisplayMode = this.DisplayMode
             };
 
             // CRITICAL: Recursively clone every child item inside the menu!

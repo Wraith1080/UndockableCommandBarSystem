@@ -50,15 +50,14 @@ namespace CommandBar.UI.Controls
         private static UndockableToolBar CreateToolBar(ToolbarModel model)
         {
             var toolBar = new UndockableToolBar();
-
-            // NEW FIX: Stop the C#-generated toolbar from stretching across the screen!
             toolBar.HorizontalAlignment = HorizontalAlignment.Left;
 
-            // Bind the Row (Band) and Position (BandIndex) so dragging saves the data
             toolBar.SetBinding(ToolBar.BandProperty, new Binding("Band") { Source = model, Mode = BindingMode.TwoWay });
             toolBar.SetBinding(ToolBar.BandIndexProperty, new Binding("BandIndex") { Source = model, Mode = BindingMode.TwoWay });
 
-            // Bind the Buttons
+            // NEW: Bind the IsMenuBar property!
+            toolBar.SetBinding(UndockableToolBar.IsMenuBarProperty, new Binding("IsMenuBar") { Source = model });
+
             toolBar.SetBinding(ItemsControl.ItemsSourceProperty, new Binding("DockedItems") { Source = model });
 
             return toolBar;
