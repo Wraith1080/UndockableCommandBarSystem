@@ -57,10 +57,21 @@ namespace CommandBar.UI.Controls
             toolBar.SetBinding(ToolBar.BandProperty, new Binding("Band") { Source = model, Mode = BindingMode.TwoWay });
             toolBar.SetBinding(ToolBar.BandIndexProperty, new Binding("BandIndex") { Source = model, Mode = BindingMode.TwoWay });
 
-            // NEW: Bind the IsMenuBar property!
-            toolBar.SetBinding(UndockableToolBar.IsMenuBarProperty, new Binding("IsMenuBar") { Source = model });
+            if (model.IsMenuBar)
+            {
+                var nativeMenu = new Menu { Background = System.Windows.Media.Brushes.Transparent };
+                nativeMenu.SetBinding(ItemsControl.ItemsSourceProperty, new Binding("DockedItems") { Source = model });
 
-            toolBar.SetBinding(ItemsControl.ItemsSourceProperty, new Binding("DockedItems") { Source = model });
+                // NEW FIX: Force the menu to map directly to the native style, bypassing the double-wrap bug!
+                nativeMenu.SetResourceReference(ItemsControl.ItemContainerStyleProperty, "NativeMenuBarItemStyle");
+
+                toolBar.Items.Add(nativeMenu);
+            }
+            else
+            {
+                // Normal toolbars continue to use the standard custom DataTemplates
+                toolBar.SetBinding(ItemsControl.ItemsSourceProperty, new Binding("DockedItems") { Source = model });
+            }
 
             return toolBar;
         }

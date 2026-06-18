@@ -2,13 +2,37 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:models="clr-namespace:CommandBar.Core.Models;assembly=CommandBar.Core"
                     xmlns:controls="clr-namespace:CommandBar.UI.Controls">
+    
+    <controls:StringToPathConverter x:Key="PathConverter" />
+    <Style x:Key="NativeMenuBarItemStyle" TargetType="MenuItem">
+        <Setter Property="Header" Value="{Binding Text}"/>
+        <Setter Property="ItemsSource" Value="{Binding ChildItems}"/>
+        <Setter Property="Command" Value="{Binding ExecuteItemCommand}"/>
+        <Setter Property="Icon" Value="{Binding IconGeometry, Converter={StaticResource PathConverter}, FallbackValue={x:Null}}"/>
+        <Setter Property="InputGestureText" Value="{Binding ShortcutText}"/>
+        <Setter Property="ToolTip" Value="{Binding Tooltip}"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding DisplayMode}" Value="TextOnly">
+                <Setter Property="Icon" Value="{x:Null}" />
+            </DataTrigger>
 
+            <DataTrigger Binding="{Binding IsSeparator}" Value="True">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate>
+                            <Separator Margin="0,2"/>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
     <DataTemplate DataType="{x:Type models:CommandItem}">
         <Button x:Name="RootButton" Command="{Binding ExecuteItemCommand}" Focusable="False" ToolTip="{Binding Tooltip}" 
                 Background="Transparent" BorderThickness="0" Margin="1" Padding="4,2">
             <StackPanel Orientation="Horizontal">
                 <Path x:Name="IconPath" Data="{Binding IconGeometry}" Fill="#444" Width="16" Height="16" Stretch="Uniform" Margin="0,0,4,0"/>
-                <TextBlock x:Name="LabelText" Text="{Binding Text}" VerticalAlignment="Center"/>
+                <AccessText x:Name="LabelText" Text="{Binding Text}" VerticalAlignment="Center"/>
             </StackPanel>
         </Button>
         <DataTemplate.Triggers>
@@ -44,7 +68,7 @@
                       Focusable="False" ToolTip="{Binding Tooltip}" Background="Transparent" BorderThickness="0" Margin="1" Padding="4,2">
             <StackPanel Orientation="Horizontal">
                 <Path x:Name="IconPath" Data="{Binding IconGeometry}" Fill="#444" Width="16" Height="16" Stretch="Uniform" Margin="0,0,4,0"/>
-                <TextBlock x:Name="LabelText" Text="{Binding Text}" VerticalAlignment="Center"/>
+                <AccessText x:Name="LabelText" Text="{Binding Text}" VerticalAlignment="Center"/>
             </StackPanel>
         </ToggleButton>
         <DataTemplate.Triggers>
@@ -86,20 +110,9 @@
                 <MenuItem.Header>
                     <StackPanel Orientation="Horizontal">
                         <Path x:Name="IconPath" Data="{Binding IconGeometry}" Fill="#444" Width="16" Height="16" Stretch="Uniform" Margin="0,0,4,0"/>
-                        <TextBlock x:Name="LabelText" Text="{Binding Text}" VerticalAlignment="Center"/>
+                        <AccessText x:Name="LabelText" Text="{Binding Text}" VerticalAlignment="Center"/>
 
-                        <Path x:Name="DropdownArrow" Data="M 0,0 L 4,4 L 8,0 Z" Fill="#444" VerticalAlignment="Center" Margin="4,2,0,0">
-                            <Path.Style>
-                                <Style TargetType="Path">
-                                    <Setter Property="Visibility" Value="Visible" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type controls:UndockableToolBar}}, Path=IsMenuBar}" Value="True">
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Path.Style>
-                        </Path>
+                        <Path x:Name="DropdownArrow" Data="M 0,0 L 4,4 L 8,0 Z" Fill="#444" VerticalAlignment="Center" Margin="4,2,0,0"/>
                     </StackPanel>
                 </MenuItem.Header>
 
@@ -107,12 +120,9 @@
                     <Style TargetType="MenuItem">
                         <Setter Property="Header" Value="{Binding Text}"/>
                         <Setter Property="Command" Value="{Binding ExecuteItemCommand}"/>
+                        <Setter Property="InputGestureText" Value="{Binding ShortcutText}"/>
                         <Setter Property="ToolTip" Value="{Binding Tooltip}"/>
-                        <Setter Property="Icon">
-                            <Setter.Value>
-                                <Path Data="{Binding IconGeometry}" Fill="#444" Width="16" Height="16" Stretch="Uniform"/>
-                            </Setter.Value>
-                        </Setter>
+                        <Setter Property="Icon" Value="{Binding IconGeometry, Converter={StaticResource PathConverter}, FallbackValue={x:Null}}"/>
                     </Style>
                 </MenuItem.ItemContainerStyle>
 

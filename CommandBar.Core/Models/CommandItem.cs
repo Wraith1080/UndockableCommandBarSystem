@@ -18,12 +18,18 @@ namespace CommandBar.Core.Models
         [ObservableProperty]
         private string _iconGeometry = string.Empty;
 
+        [ObservableProperty]
+        private string _shortcutText = string.Empty; // e.g., "Ctrl+S"
+
         // NEW: Controls how the UI renders this specific button
         [ObservableProperty]
         private CommandDisplayMode _displayMode = CommandDisplayMode.ImageAndText;
 
         public Action? ActionCallback { get; set; }
         public ICommand ExecuteItemCommand => new RelayCommand(() => ActionCallback?.Invoke());
+
+        // NEW: Allows native menus to know if this is a separator without using a DataTemplate
+        public virtual bool IsSeparator => false;
 
         public virtual CommandItem Clone()
         {

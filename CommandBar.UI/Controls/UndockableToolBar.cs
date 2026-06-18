@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -84,33 +85,50 @@ namespace CommandBar.UI.Controls
         {
             base.OnApplyTemplate();
 
-            _dragGrip = GetTemplateChild("PART_DragGrip") as UIElement;
-
-            if (_dragGrip != null)
+            // Find the native dotted grip built into the standard WPF ToolBar
+            if (GetTemplateChild("ToolBarThumb") is System.Windows.Controls.Primitives.Thumb thumb)
             {
-                _dragGrip.MouseLeftButtonDown += DragGrip_MouseLeftButtonDown;
-                _dragGrip.MouseMove += DragGrip_MouseMove;
-                _dragGrip.MouseLeftButtonUp += DragGrip_MouseLeftButtonUp;
+                // Listen to it move instead of hijacking the initial click!
+                thumb.DragDelta += Thumb_DragDelta;
             }
         }
 
-        private void DragGrip_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void Thumb_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
         {
             var parentWindow = Window.GetWindow(this);
+
+            // 1. ARE WE ALREADY FLOATING?
             if (parentWindow is FloatingToolBarWindow floatingWindow)
             {
-                if (e.ButtonState == MouseButtonState.Pressed)
-                {
-                    // START THE UNIFIED MATH DRAG
-                    Point clickPos = e.GetPosition(floatingWindow);
-                    floatingWindow.StartManualDrag(clickPos.X, clickPos.Y);
-                }
-                return; 
+                // Force the native grip to release the mouse...
+                var thumb = sender as System.Windows.Controls.Primitives.Thumb;
+                thumb?.CancelDrag();
+
+                // ...and instantly pass control to your custom floating window drag loop!
+                Point offset = Mouse.GetPosition(floatingWindow);
+                floatingWindow.StartManualDrag(offset.X, offset.Y);
+                return;
             }
 
-            _isDragging = true;
-            _startMousePosition = e.GetPosition(this);
-            _dragGrip?.CaptureMouse();
+            // 2. WE ARE DOCKED IN THE TRAY
+            var tray = this.Parent as ToolBarTray ?? System.Windows.Media.VisualTreeHelper.GetParent(this) as ToolBarTray;
+
+            if (tray != null)
+            {
+                Point mousePos = Mouse.GetPosition(tray);
+                double tearOffThreshold = 30;
+
+                // 3. Did they drag it off the tray?
+                if (mousePos.X < -tearOffThreshold || mousePos.Y < -tearOffThreshold ||
+                    mousePos.X > tray.ActualWidth + tearOffThreshold || mousePos.Y > tray.ActualHeight + tearOffThreshold)
+                {
+                    // THE SEAMLESS HANDOFF
+                    var thumb = sender as System.Windows.Controls.Primitives.Thumb;
+                    thumb?.CancelDrag();
+
+                    InitiateTearOff();
+                }
+            }
         }
 
         private void DragGrip_MouseMove(object sender, MouseEventArgs e)
@@ -151,40 +169,48 @@ namespace CommandBar.UI.Controls
                 floatingWindow.Owner = mainWindow;
             }
 
-            var floatingBar = new UndockableToolBar
+            var floatingBar = new UndockableToolBar();
+            floatingBar.DataContext = this.DataContext;
+            floatingBar.IsMenuBar = this.IsMenuBar;
+
+            // 2. THE FIX: Reconstruct the visuals properly!
+            if (this.IsMenuBar)
             {
-                ItemsSource = this.ItemsSource
-            };
+                // Inject the native menu into the floating window
+                var nativeMenu = new Menu { Background = System.Windows.Media.Brushes.Transparent };
+                nativeMenu.SetBinding(ItemsControl.ItemsSourceProperty, new Binding("DockedItems") { Source = this.DataContext });
+                nativeMenu.SetResourceReference(ItemsControl.ItemContainerStyleProperty, "NativeMenuBarItemStyle");
 
-            System.Windows.Input.FocusManager.SetIsFocusScope(floatingBar, false);
-
-            // CHANGED: Rip out the C# Border. Just assign the bar.
-            floatingWindow.Content = floatingBar;
-
-            var mousePos = PointToScreen(Mouse.GetPosition(this));
-            var source = PresentationSource.FromVisual(this);
-            if (source?.CompositionTarget != null)
-            {
-                mousePos = source.CompositionTarget.TransformFromDevice.Transform(mousePos);
-            }
-
-            floatingWindow.Left = mousePos.X - TearOffOffsetX;
-            floatingWindow.Top = mousePos.Y - TearOffOffsetY;
-
-            this.Visibility = Visibility.Collapsed;
-
-            floatingWindow.Show();
-
-            if (Mouse.LeftButton == MouseButtonState.Pressed)
-            {
-                // Trigger the unified drag loop!
-                floatingWindow.StartManualDrag(TearOffOffsetX, TearOffOffsetY);
+                floatingBar.Items.Add(nativeMenu);
             }
             else
             {
-                // Fallback in case they release the mouse instantly
-                CheckForRedock(floatingWindow);
+                // Standard toolbar data binding
+                floatingBar.SetBinding(ItemsControl.ItemsSourceProperty, new Binding("DockedItems") { Source = this.DataContext });
             }
+
+            // 3. Strip focus scope so it doesn't steal window activation! (From our earlier fix)
+            System.Windows.Input.FocusManager.SetIsFocusScope(floatingBar, false);
+
+            floatingWindow.Content = floatingBar;
+
+            if (this.DataContext is ToolbarModel model)
+            {
+                model.RequestDockChange(DockLocation.Floating);
+            }
+
+            // 2. Get the exact screen coordinates of the cursor
+            GetCursorPos(out POINT p); // (Requires the Win32 GetCursorPos import you used in FloatingToolBarWindow)
+
+            // 3. Center the new floating window on the mouse
+            floatingWindow.Left = p.X - 20;
+            floatingWindow.Top = p.Y - 15;
+
+            // 4. Show the window
+            floatingWindow.Show();
+
+            // 5. Instantly resume the custom math drag so the user never notices the transition!
+            floatingWindow.StartManualDrag(20, 15);
         }
 
         public void CheckForRedock(FloatingToolBarWindow floatingWindow)
