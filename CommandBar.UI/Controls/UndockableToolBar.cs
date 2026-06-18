@@ -30,6 +30,8 @@ namespace CommandBar.UI.Controls
         // NEW: Controls how far the user must drag outside the tray to trigger a tear-off
         public double TearOffThreshold { get; set; } = 30.0;
 
+        public bool IsCustomizeMode { get; set; } = false;
+
         private UIElement? _dragGrip;
         private bool _isDragging;
         private Point _startMousePosition;
@@ -296,6 +298,12 @@ namespace CommandBar.UI.Controls
 
         protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
         {
+            if (!IsCustomizeMode)
+            {
+                base.OnPreviewMouseLeftButtonDown(e);
+                return;
+            }
+
             base.OnPreviewMouseLeftButtonDown(e);
 
             // If they clicked the drag grip, ignore it! (Let your existing Tear-off logic handle it)
@@ -316,6 +324,11 @@ namespace CommandBar.UI.Controls
 
         protected override void OnPreviewMouseMove(MouseEventArgs e)
         {
+            if (!IsCustomizeMode)
+            {
+                base.OnPreviewMouseMove(e);
+                return;
+            }
             base.OnPreviewMouseMove(e);
 
             if (_isPreparingToDragItem && e.LeftButton == MouseButtonState.Pressed)

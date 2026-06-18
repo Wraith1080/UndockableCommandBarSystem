@@ -49,27 +49,25 @@ namespace CommandBar.UI.Controls
         // Helper method to automatically bind the layout properties
         private static UndockableToolBar CreateToolBar(ToolbarModel model)
         {
-            var toolBar = new UndockableToolBar();
+            var toolBar = new UndockableToolBar { DataContext = model };
             toolBar.HorizontalAlignment = HorizontalAlignment.Left;
-
-            toolBar.DataContext = model;
 
             toolBar.SetBinding(ToolBar.BandProperty, new Binding("Band") { Source = model, Mode = BindingMode.TwoWay });
             toolBar.SetBinding(ToolBar.BandIndexProperty, new Binding("BandIndex") { Source = model, Mode = BindingMode.TwoWay });
+            toolBar.SetBinding(UndockableToolBar.IsMenuBarProperty, new Binding("IsMenuBar") { Source = model });
+            
+            //ItemReorderBehavior.SetIsEnabled(toolBar, false);
 
             if (model.IsMenuBar)
             {
                 var nativeMenu = new Menu { Background = System.Windows.Media.Brushes.Transparent };
                 nativeMenu.SetBinding(ItemsControl.ItemsSourceProperty, new Binding("DockedItems") { Source = model });
-
-                // NEW FIX: Force the menu to map directly to the native style, bypassing the double-wrap bug!
                 nativeMenu.SetResourceReference(ItemsControl.ItemContainerStyleProperty, "NativeMenuBarItemStyle");
 
                 toolBar.Items.Add(nativeMenu);
             }
             else
             {
-                // Normal toolbars continue to use the standard custom DataTemplates
                 toolBar.SetBinding(ItemsControl.ItemsSourceProperty, new Binding("DockedItems") { Source = model });
             }
 
