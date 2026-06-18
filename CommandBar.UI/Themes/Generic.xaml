@@ -11,7 +11,7 @@
                     <Condition Binding="{Binding IsMenuBar, RelativeSource={RelativeSource Self}}" Value="True" />
                     <Condition Binding="{Binding Orientation, RelativeSource={RelativeSource Self}}" Value="Horizontal" />
                 </MultiDataTrigger.Conditions>
-                <Setter Property="MinWidth" Value="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ToolBarTray}}" />
+                <Setter Property="MinWidth" Value="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type ToolBarTray}}}" />
             </MultiDataTrigger>
 
             <MultiDataTrigger>
@@ -19,7 +19,7 @@
                     <Condition Binding="{Binding IsMenuBar, RelativeSource={RelativeSource Self}}" Value="True" />
                     <Condition Binding="{Binding Orientation, RelativeSource={RelativeSource Self}}" Value="Vertical" />
                 </MultiDataTrigger.Conditions>
-                <Setter Property="MinHeight" Value="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=ToolBarTray}}" />
+                <Setter Property="MinHeight" Value="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType={x:Type ToolBarTray}}}" />
             </MultiDataTrigger>
         </Style.Triggers>
 

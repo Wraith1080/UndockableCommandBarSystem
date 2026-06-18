@@ -27,6 +27,9 @@ namespace CommandBar.UI.Controls
         // NEW: Controls how close the mouse must be to an edge(in pixels) to trigger docking
         public double EdgeSnapThreshold { get; set; } = 60.0;
 
+        // NEW: Controls how far the user must drag outside the tray to trigger a tear-off
+        public double TearOffThreshold { get; set; } = 30.0;
+
         private UIElement? _dragGrip;
         private bool _isDragging;
         private Point _startMousePosition;
@@ -48,10 +51,10 @@ namespace CommandBar.UI.Controls
         private DockingGhostAdorner? _currentAdorner;
 
         public static readonly DependencyProperty TearOffOffsetXProperty =
-            DependencyProperty.Register(nameof(TearOffOffsetX), typeof(double), typeof(UndockableToolBar), new PropertyMetadata(10.0));
+            DependencyProperty.Register(nameof(TearOffOffsetX), typeof(double), typeof(UndockableToolBar), new PropertyMetadata(20.0));
 
         public static readonly DependencyProperty TearOffOffsetYProperty =
-            DependencyProperty.Register(nameof(TearOffOffsetY), typeof(double), typeof(UndockableToolBar), new PropertyMetadata(10.0));
+            DependencyProperty.Register(nameof(TearOffOffsetY), typeof(double), typeof(UndockableToolBar), new PropertyMetadata(15.0));
 
         // NEW: Dependency Property so XAML Triggers can see if this is a MenuBar
         public static readonly DependencyProperty IsMenuBarProperty =
@@ -116,7 +119,7 @@ namespace CommandBar.UI.Controls
             if (tray != null)
             {
                 Point mousePos = Mouse.GetPosition(tray);
-                double tearOffThreshold = 30;
+                double tearOffThreshold = TearOffThreshold;
 
                 // 3. Did they drag it off the tray?
                 if (mousePos.X < -tearOffThreshold || mousePos.Y < -tearOffThreshold ||
@@ -203,14 +206,14 @@ namespace CommandBar.UI.Controls
             GetCursorPos(out POINT p); // (Requires the Win32 GetCursorPos import you used in FloatingToolBarWindow)
 
             // 3. Center the new floating window on the mouse
-            floatingWindow.Left = p.X - 20;
-            floatingWindow.Top = p.Y - 15;
+            floatingWindow.Left = p.X - TearOffOffsetX;
+            floatingWindow.Top = p.Y - TearOffOffsetY;
 
             // 4. Show the window
             floatingWindow.Show();
 
             // 5. Instantly resume the custom math drag so the user never notices the transition!
-            floatingWindow.StartManualDrag(20, 15);
+            floatingWindow.StartManualDrag(TearOffOffsetX, TearOffOffsetY);
         }
 
         public void CheckForRedock(FloatingToolBarWindow floatingWindow)
