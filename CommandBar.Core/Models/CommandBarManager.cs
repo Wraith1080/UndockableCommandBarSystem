@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text.Json; // REQUIRED FOR JSON
@@ -15,6 +16,13 @@ namespace CommandBar.Core.Models
         public ObservableCollection<ToolbarModel> BottomToolbars { get; } = new();
         public ObservableCollection<ToolbarModel> LeftToolbars { get; } = new();
         public ObservableCollection<ToolbarModel> RightToolbars { get; } = new();
+
+        // The Master Switch that unlocks toolbars for dragging
+        [ObservableProperty]
+        private bool _isCustomizeMode = false;
+
+        // NEW: A delegate that the UI layer will hook into
+        public Action? OpenCustomizeDialogAction { get; set; }
 
         /// <summary>
         /// Registers a command into the master dictionary. 
@@ -121,6 +129,15 @@ namespace CommandBar.Core.Models
                 case DockLocation.Left: LeftToolbars.Add(toolbar); break;
                 case DockLocation.Right: RightToolbars.Add(toolbar); break;
             }
+        }
+
+        public void ShowCustomizeDialog()
+        {
+            // 1. Unlock the toolbars
+            this.IsCustomizeMode = true;
+
+            // 2. Tell the UI layer to physically open the window (if it is hooked up)
+            OpenCustomizeDialogAction?.Invoke();
         }
     }
 
