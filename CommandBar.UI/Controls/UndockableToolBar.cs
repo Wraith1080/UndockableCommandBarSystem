@@ -306,6 +306,7 @@ namespace CommandBar.UI.Controls
 
         protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
         {
+            // THE PADLOCK
             if (!IsCustomizeMode)
             {
                 base.OnPreviewMouseLeftButtonDown(e);
@@ -317,7 +318,7 @@ namespace CommandBar.UI.Controls
             // If they clicked the drag grip, ignore it! (Let your existing Tear-off logic handle it)
             if (_dragGrip != null && _dragGrip.IsMouseOver) return;
 
-            // NEW: Use native WPF hit testing to find the clicked visual element
+            // Use native WPF hit testing to find the clicked visual element
             if (VisualTreeHelper.HitTest(this, e.GetPosition(this))?.VisualHit is DependencyObject hit)
             {
                 // Check if the hit element belongs to one of our generated item containers
@@ -332,6 +333,7 @@ namespace CommandBar.UI.Controls
 
         protected override void OnPreviewMouseMove(MouseEventArgs e)
         {
+            // THE PADLOCK
             if (!IsCustomizeMode)
             {
                 base.OnPreviewMouseMove(e);
@@ -363,21 +365,32 @@ namespace CommandBar.UI.Controls
             var dataItem = this.ItemContainerGenerator.ItemFromContainer(container);
             if (dataItem == null) return;
 
-            // NEW: Package BOTH the item and its source collection into the drag payload
+            // Package BOTH the item and its source collection into the drag payload
             var dataObj = new DataObject();
             dataObj.SetData("CommandItemFormat", dataItem);
             dataObj.SetData("SourceListFormat", this.ItemsSource); // Pass the original list!
 
-            DragDrop.DoDragDrop(container, dataObj, DragDropEffects.Move);
+            // 1. Capture the result of the drag! Allow both Copy and Move.
+            DragDropEffects result = DragDrop.DoDragDrop(container, dataObj, DragDropEffects.Move | DragDropEffects.Copy);
 
             RemoveCaret();
+
+            // 2. THE REMOVAL LOGIC: Did they drop it into the void?
+            if (result == DragDropEffects.None)
+            {
+                if (this.ItemsSource is System.Collections.IList targetList)
+                {
+                    // Poof! Remove it from the live collection.
+                    targetList.Remove(dataItem);
+                }
+            }
         }
 
         protected override void OnDragOver(DragEventArgs e)
         {
             base.OnDragOver(e);
 
-            // Padlock!
+            // THE PADLOCK
             if (!IsCustomizeMode)
             {
                 e.Effects = DragDropEffects.None;
@@ -385,16 +398,14 @@ namespace CommandBar.UI.Controls
                 return;
             }
 
-            // THE FIX: The Handshake. Tell WPF we accept this payload!
+            // THE HANDSHAKE: Tell WPF we accept this payload!
             if (e.Data.GetDataPresent("CommandItemFormat"))
             {
                 e.Effects = DragDropEffects.Copy | DragDropEffects.Move;
                 e.Handled = true;
-            }
 
-            e.Effects = DragDropEffects.Move;
-            DrawCaret(e.GetPosition(this));
-            e.Handled = true;
+                DrawCaret(e.GetPosition(this));
+            }
         }
 
         protected override void OnDragLeave(DragEventArgs e)
@@ -415,6 +426,9 @@ namespace CommandBar.UI.Controls
             base.OnDrop(e);
             RemoveCaret();
 
+            // THE PADLOCK
+            if (!IsCustomizeMode) return;
+
             // Extract the item AND the source list from the payload
             var draggedData = e.Data.GetData("CommandItemFormat") as CommandItem;
             var sourceList = e.Data.GetData("SourceListFormat") as System.Collections.IList;
@@ -423,10 +437,15 @@ namespace CommandBar.UI.Controls
 
             int insertIndex = CalculateInsertionState(e.GetPosition(this), out _);
 
-            // NEW: Decide if this is an internal shuffle or a cross-toolbar steal
-            if (sourceList == targetList)
+            // Decide if this is an external copy, internal shuffle, or cross-toolbar steal
+            if (sourceList == null)
             {
-                // It's the same toolbar. Just shuffle the index.
+                // 1. EXTERNAL COPY: It came from the Customize Dialog (which doesn't pack a source list)
+                targetList.Insert(insertIndex, draggedData);
+            }
+            else if (sourceList == targetList)
+            {
+                // 2. INTERNAL SHUFFLE: It's the same toolbar.
                 int oldIndex = targetList.IndexOf(draggedData);
                 if (oldIndex != -1 && oldIndex != insertIndex)
                 {
@@ -437,8 +456,8 @@ namespace CommandBar.UI.Controls
             }
             else
             {
-                // It's a DIFFERENT toolbar! Steal it from the source list.
-                sourceList?.Remove(draggedData);
+                // 3. CROSS-TOOLBAR STEAL: It's a DIFFERENT toolbar! Steal it from the source list.
+                sourceList.Remove(draggedData);
                 targetList.Insert(insertIndex, draggedData);
             }
 
