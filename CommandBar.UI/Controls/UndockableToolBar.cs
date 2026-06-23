@@ -30,7 +30,15 @@ namespace CommandBar.UI.Controls
         // NEW: Controls how far the user must drag outside the tray to trigger a tear-off
         public double TearOffThreshold { get; set; } = 30.0;
 
-        public bool IsCustomizeMode { get; set; } = false;
+        // UPGRADED: Now it can receive data bindings!
+        public static readonly DependencyProperty IsCustomizeModeProperty =
+            DependencyProperty.Register("IsCustomizeMode", typeof(bool), typeof(UndockableToolBar), new PropertyMetadata(false));
+
+        public bool IsCustomizeMode
+        {
+            get => (bool)GetValue(IsCustomizeModeProperty);
+            set => SetValue(IsCustomizeModeProperty, value);
+        }
 
         private UIElement? _dragGrip;
         private bool _isDragging;
@@ -369,13 +377,19 @@ namespace CommandBar.UI.Controls
         {
             base.OnDragOver(e);
 
-            // Only react if the thing being dragged is our custom command format
-            if (!e.Data.GetDataPresent("CommandItemFormat"))
+            // Padlock!
+            if (!IsCustomizeMode)
             {
                 e.Effects = DragDropEffects.None;
-                RemoveCaret();
                 e.Handled = true;
                 return;
+            }
+
+            // THE FIX: The Handshake. Tell WPF we accept this payload!
+            if (e.Data.GetDataPresent("CommandItemFormat"))
+            {
+                e.Effects = DragDropEffects.Copy | DragDropEffects.Move;
+                e.Handled = true;
             }
 
             e.Effects = DragDropEffects.Move;

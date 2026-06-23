@@ -4,7 +4,13 @@
         xmlns:models="clr-namespace:CommandBar.Core.Models;assembly=CommandBar.Core"
         Title="Customize Toolbars" Height="450" Width="300"
         WindowStyle="ToolWindow" Topmost="True" ResizeMode="NoResize">
-
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/CommandBar.UI;component/CommandBarTemplates.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -14,14 +20,14 @@
         <TextBlock Text="Drag commands to your toolbars:" FontWeight="SemiBold" Margin="0,0,0,10"/>
 
         <ListBox x:Name="MasterCommandList" Grid.Row="1" 
-                 ItemsSource="{Binding RegisteredCommands}"
+                 ItemsSource="{Binding AvailableCommands}"
                  PreviewMouseLeftButtonDown="MasterCommandList_PreviewMouseLeftButtonDown"
                  PreviewMouseMove="MasterCommandList_PreviewMouseMove">
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="{x:Type models:CommandItem}">
                     <StackPanel Orientation="Horizontal" Margin="4">
-                        <Path Data="{Binding IconGeometry, Converter={StaticResource PathConverter}, FallbackValue={x:Null}}" 
-                              Fill="#444" Width="16" Height="16" Stretch="Uniform" Margin="0,0,10,0"/>
+                        <ContentControl Content="{Binding IconGeometry, Converter={StaticResource PathConverter}}" 
+                                        Width="16" Height="16" Margin="0,0,10,0"/>
                         <TextBlock Text="{Binding Text}" VerticalAlignment="Center" FontSize="14"/>
                     </StackPanel>
                 </DataTemplate>

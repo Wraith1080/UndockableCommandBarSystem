@@ -1,5 +1,6 @@
 ﻿using CommandBar.Core.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -17,10 +18,40 @@ namespace CommandBar.DemoApp
         public ObservableCollection<ToolbarModel> LeftToolbars => Manager.LeftToolbars;
         public ObservableCollection<ToolbarModel> RightToolbars => Manager.RightToolbars;
 
+        private Window? _customizeDialogInstance;
+
+        // Command to open the dialog
+        public RelayCommand OpenCustomizeDialogCommand { get; }
+
         public MainViewModel()
         {
-            // 1. POPULATE THE MASTER REGISTRY (One time only)
+            Manager = new CommandBarManager();
             RegisterAllAppCommands();
+
+            // THE FIX: We bridge the gap here! The App tells the Core how to open the UI.
+            Manager.OpenCustomizeDialogAction = () =>
+            {
+                // Prevent multiple copies! If it's already open, just focus it!
+                if (_customizeDialogInstance != null)
+                {
+                    _customizeDialogInstance.Focus();
+                    return;
+                }
+
+                _customizeDialogInstance = new CommandBar.UI.Dialogs.CustomizeWindow();
+                _customizeDialogInstance.DataContext = this.Manager;
+
+                _customizeDialogInstance.Closed += (s, e) =>
+                {
+                    Manager.IsCustomizeMode = false;
+                    _customizeDialogInstance = null; // Clear the instance when they close it
+                };
+
+                _customizeDialogInstance.Show();
+            };
+
+            // Hook up the button command to trigger the Manager
+            OpenCustomizeDialogCommand = new RelayCommand(Manager.ShowCustomizeDialog);
 
             // 2. LOAD THE JSON LAYOUT FILE
             if (File.Exists("DefaultLayout.json"))

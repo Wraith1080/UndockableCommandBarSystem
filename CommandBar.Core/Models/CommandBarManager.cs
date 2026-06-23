@@ -6,7 +6,7 @@ using System.Text.Json; // REQUIRED FOR JSON
 
 namespace CommandBar.Core.Models
 {
-    public class CommandBarManager
+    public partial class CommandBarManager : ObservableObject
     {
         // THE MASTER REGISTRY: Holds the pure definition of every button/action in the app
         private readonly Dictionary<string, CommandItem> _masterCommandRegistry = new();
@@ -23,6 +23,8 @@ namespace CommandBar.Core.Models
 
         // NEW: A delegate that the UI layer will hook into
         public Action? OpenCustomizeDialogAction { get; set; }
+
+        public System.Collections.Generic.IEnumerable<CommandItem> AvailableCommands => _masterCommandRegistry.Values;
 
         /// <summary>
         /// Registers a command into the master dictionary. 

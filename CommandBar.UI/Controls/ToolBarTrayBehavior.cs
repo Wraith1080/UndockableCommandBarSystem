@@ -55,7 +55,14 @@ namespace CommandBar.UI.Controls
             toolBar.SetBinding(ToolBar.BandProperty, new Binding("Band") { Source = model, Mode = BindingMode.TwoWay });
             toolBar.SetBinding(ToolBar.BandIndexProperty, new Binding("BandIndex") { Source = model, Mode = BindingMode.TwoWay });
             toolBar.SetBinding(UndockableToolBar.IsMenuBarProperty, new Binding("IsMenuBar") { Source = model });
-            
+
+            // BIND THE MASTER SWITCH!
+            // This tells the Toolbar to look up the visual tree, find the Main Window, and listen to the Manager!
+            toolBar.SetBinding(UndockableToolBar.IsCustomizeModeProperty, new Binding("DataContext.Manager.IsCustomizeMode")
+            {
+                RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(Window), 1)
+            });
+
             //ItemReorderBehavior.SetIsEnabled(toolBar, false);
 
             if (model.IsMenuBar)

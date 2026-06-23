@@ -37,7 +37,8 @@ namespace CommandBar.UI.Dialogs
                     {
                         // Clone the item so we don't drain the master pool!
                         DataObject dragData = new DataObject("CommandItemFormat", commandToDrag.Clone());
-                        DragDrop.DoDragDrop(listViewItem, dragData, DragDropEffects.Copy);
+                        DragDrop.DoDragDrop(listViewItem, dragData, DragDropEffects.Copy | DragDropEffects.Move);
+
                     }
                 }
             }

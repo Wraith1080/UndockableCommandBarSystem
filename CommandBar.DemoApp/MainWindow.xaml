@@ -26,5 +26,11 @@
             <TextBox AcceptsReturn="True" TextWrapping="Wrap" Margin="10" FontFamily="Consolas" FontSize="14"
                      Text="Type your document here..."/>
         </DockPanel>
+        <Button Content="⚙️ Customize Toolbars" 
+                    Command="{Binding OpenCustomizeDialogCommand}" 
+                    Width="180" Height="40" 
+                    FontSize="16" FontWeight="SemiBold"
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Cursor="Hand" />
     </Grid>
 </Window>
