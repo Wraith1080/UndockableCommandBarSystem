@@ -174,17 +174,20 @@ namespace CommandBar.UI.Controls
             // NEW: Give the floating window a reference to this original toolbar
             floatingWindow.OriginalToolBar = this;
 
+            var floatingBar = new UndockableToolBar();
+            floatingBar.DataContext = this.DataContext;
+            floatingBar.IsMenuBar = this.IsMenuBar;
+
             // NEW: Bind the floating palette to the main application window!
             // This prevents the OS from treating it as a competing, separate application.
             var mainWindow = Window.GetWindow(this);
             if (mainWindow != null)
             {
-                floatingWindow.Owner = mainWindow;
+                floatingBar.SetBinding(UndockableToolBar.IsCustomizeModeProperty, new Binding("DataContext.Manager.IsCustomizeMode")
+                {
+                    Source = mainWindow
+                });
             }
-
-            var floatingBar = new UndockableToolBar();
-            floatingBar.DataContext = this.DataContext;
-            floatingBar.IsMenuBar = this.IsMenuBar;
 
             // 2. THE FIX: Reconstruct the visuals properly!
             if (this.IsMenuBar)

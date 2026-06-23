@@ -41,6 +41,12 @@ namespace CommandBar.DemoApp
                 _customizeDialogInstance = new CommandBar.UI.Dialogs.CustomizeWindow();
                 _customizeDialogInstance.DataContext = this.Manager;
 
+                // THE FIX: Tether the dialog's lifecycle to the Main Window!
+                if (Application.Current.MainWindow != null)
+                {
+                    _customizeDialogInstance.Owner = Application.Current.MainWindow;
+                }
+
                 _customizeDialogInstance.Closed += (s, e) =>
                 {
                     Manager.IsCustomizeMode = false;
