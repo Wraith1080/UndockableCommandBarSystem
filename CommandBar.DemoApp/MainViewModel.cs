@@ -212,14 +212,26 @@ namespace CommandBar.DemoApp
         // Add this method anywhere in MainViewModel
         public void SaveCurrentLayout()
         {
-            string json = Manager.SaveLayoutToJson();
-            // Save to the user-specific file, leaving the DefaultLayout.json intact
-            File.WriteAllText("user_layout.json", json);
+            // Save Layout
+            string layoutJson = Manager.SaveLayoutToJson();
+            File.WriteAllText("user_layout.json", layoutJson);
+
+            // 🟢 NEW: Save Command Customizations
+            string commandsJson = Manager.SaveCommandsToJson();
+            File.WriteAllText("user_commands.json", commandsJson);
         }
 
         // Add this anywhere in your MainViewModel class
         public void InitializeLayout()
         {
+            // 🟢 NEW: Load Command Customizations FIRST
+            if (File.Exists("user_commands.json"))
+            {
+                string cmdJson = File.ReadAllText("user_commands.json");
+                Manager.LoadCommandsFromJson(cmdJson);
+            }
+
+            // Existing Layout Load
             if (File.Exists("user_layout.json"))
             {
                 string json = File.ReadAllText("user_layout.json");

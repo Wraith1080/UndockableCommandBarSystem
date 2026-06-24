@@ -1,5 +1,6 @@
 ﻿using CommandBar.Core.Models;
 using System;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -129,6 +130,44 @@ namespace CommandBar.UI.Dialogs
                 if (this.DataContext is CommandBarManager manager && System.IO.File.Exists("DefaultLayout.json"))
                 {
                     manager.ResetToolbar(tb, System.IO.File.ReadAllText("DefaultLayout.json"));
+                }
+            }
+        }
+
+        // Add this to your usings at the top if it isn't there:
+        // using System.Text.RegularExpressions;
+
+        private void BrowseSvg_Click(object sender, RoutedEventArgs e)
+        {
+            if (MasterCommandList.SelectedItem is CommandItem selectedCmd)
+            {
+                var dialog = new Microsoft.Win32.OpenFileDialog
+                {
+                    Title = "Select an SVG Icon",
+                    Filter = "SVG Files (*.svg)|*.svg|All Files (*.*)|*.*"
+                };
+
+                if (dialog.ShowDialog() == true)
+                {
+                    try
+                    {
+                        string svgContent = System.IO.File.ReadAllText(dialog.FileName);
+
+                        // Extract the vector data from the d="..." attribute
+                        var match = Regex.Match(svgContent, @"d=""([^""]+)""");
+                        if (match.Success)
+                        {
+                            selectedCmd.IconGeometry = match.Groups[1].Value;
+                        }
+                        else
+                        {
+                            MessageBox.Show("Could not find a valid vector path (d=\"...\") in this SVG file.", "Invalid SVG", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Error reading SVG file: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
             }
         }

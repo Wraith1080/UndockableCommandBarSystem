@@ -205,6 +205,42 @@ namespace CommandBar.Core.Models
             return JsonSerializer.Serialize(layout, options);
         }
 
+        // --- 🟢 NEW: COMMAND PERSISTENCE ---
+        public string SaveCommandsToJson()
+        {
+            var dtoList = new List<CommandDto>();
+            foreach (var cmd in _masterCommandRegistry.Values)
+            {
+                dtoList.Add(new CommandDto
+                {
+                    Id = cmd.Id,
+                    Text = cmd.Text,
+                    Tooltip = cmd.Tooltip,
+                    IconGeometry = cmd.IconGeometry
+                });
+            }
+            return JsonSerializer.Serialize(dtoList, new JsonSerializerOptions { WriteIndented = true });
+        }
+
+        public void LoadCommandsFromJson(string json)
+        {
+            if (string.IsNullOrWhiteSpace(json)) return;
+
+            var dtoList = JsonSerializer.Deserialize<List<CommandDto>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            if (dtoList == null) return;
+
+            foreach (var dto in dtoList)
+            {
+                // If the command exists in our dictionary, overwrite its default properties with the user's custom properties!
+                if (_masterCommandRegistry.TryGetValue(dto.Id, out var existingCmd))
+                {
+                    existingCmd.Text = dto.Text;
+                    existingCmd.Tooltip = dto.Tooltip;
+                    existingCmd.IconGeometry = dto.IconGeometry;
+                }
+            }
+        }
+
         // --- NEW: THE RESET ENGINE ---
         public void ResetToolbar(ToolbarModel toolbar, string defaultJsonString)
         {
@@ -273,12 +309,60 @@ namespace CommandBar.Core.Models
             // 2. Tell the UI layer to physically open the window (if it is hooked up)
             OpenCustomizeDialogAction?.Invoke();
         }
+
+        // 1. The Event Handler that listens to the Master Dictionary
+        private void MasterCommand_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (sender is CommandItem masterCmd)
+            {
+                // Only sync visual properties, ignore state properties like IsVisible
+                if (e.PropertyName == nameof(CommandItem.Text) ||
+                    e.PropertyName == nameof(CommandItem.Tooltip) ||
+                    e.PropertyName == nameof(CommandItem.IconGeometry))
+                {
+                    // Sweep through every instantiated toolbar
+                    foreach (var tb in AllToolbars)
+                    {
+                        UpdateClonesRecursive(tb.DockedItems, masterCmd, e.PropertyName);
+                    }
+                }
+            }
+        }
+
+        // 2. The Recursive sweeping method to find the clones
+        private void UpdateClonesRecursive(IEnumerable<CommandItem> items, CommandItem masterCmd, string propertyName)
+        {
+            foreach (var item in items)
+            {
+                // If we found a clone of the master item, update it!
+                if (item.Id == masterCmd.Id && item != masterCmd)
+                {
+                    if (propertyName == nameof(CommandItem.Text)) item.Text = masterCmd.Text;
+                    else if (propertyName == nameof(CommandItem.Tooltip)) item.Tooltip = masterCmd.Tooltip;
+                    else if (propertyName == nameof(CommandItem.IconGeometry)) item.IconGeometry = masterCmd.IconGeometry;
+                }
+
+                // If this item is a Menu or Dropdown, we must recursively check its children!
+                if (item is CommandDropdownItem dropdown && dropdown.ChildItems != null)
+                {
+                    UpdateClonesRecursive(dropdown.ChildItems, masterCmd, propertyName);
+                }
+            }
+        }
     }
 
     // --- NEW: LIGHTWEIGHT DTOs FOR JSON PARSING ---
     public class LayoutFileDto
     {
         public List<ToolbarConfigDto> Toolbars { get; set; } = new();
+    }
+
+    public class CommandDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Text { get; set; } = string.Empty;
+        public string Tooltip { get; set; } = string.Empty;
+        public string IconGeometry { get; set; } = string.Empty;
     }
 
     public class ToolbarConfigDto
