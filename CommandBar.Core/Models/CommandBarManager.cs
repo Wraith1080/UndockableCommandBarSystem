@@ -114,6 +114,50 @@ namespace CommandBar.Core.Models
             }
         }
 
+        // --- NEW: THE JSON SERIALIZATION ENGINE ---
+        public string SaveLayoutToJson()
+        {
+            var layout = new LayoutFileDto();
+
+            // Local helper function to process each dock collection
+            void ProcessToolbars(IEnumerable<ToolbarModel> toolbars)
+            {
+                foreach (var tb in toolbars)
+                {
+                    var config = new ToolbarConfigDto
+                    {
+                        Name = tb.Name,
+                        Band = tb.Band,
+                        BandIndex = tb.BandIndex,
+                        IsMenuBar = tb.IsMenuBar,
+                        Dock = tb.DockLocation.ToString(),
+                        // Extract only the string IDs of the commands!
+                        Items = new List<string>()
+                    };
+
+                    foreach (var item in tb.DockedItems)
+                    {
+                        if (!string.IsNullOrEmpty(item.Id))
+                        {
+                            config.Items.Add(item.Id);
+                        }
+                    }
+
+                    layout.Toolbars.Add(config);
+                }
+            }
+
+            // Process all 4 zones
+            ProcessToolbars(TopToolbars);
+            ProcessToolbars(BottomToolbars);
+            ProcessToolbars(LeftToolbars);
+            ProcessToolbars(RightToolbars);
+
+            // Serialize with nice indentation so users can read/edit it manually if they want to
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            return JsonSerializer.Serialize(layout, options);
+        }
+
         // NEW: Plucks the toolbar out of its old list and puts it in the new one!
         private void MoveToolbar(ToolbarModel toolbar, DockLocation newDock)
         {

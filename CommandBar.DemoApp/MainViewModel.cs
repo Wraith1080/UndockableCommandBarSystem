@@ -60,7 +60,12 @@ namespace CommandBar.DemoApp
             OpenCustomizeDialogCommand = new RelayCommand(Manager.ShowCustomizeDialog);
 
             // 2. LOAD THE JSON LAYOUT FILE
-            if (File.Exists("DefaultLayout.json"))
+            if (File.Exists("user_layout.json"))
+            {
+                string json = File.ReadAllText("user_layout.json");
+                Manager.LoadLayoutFromJson(json);
+            }
+            else if (File.Exists("DefaultLayout.json"))
             {
                 string json = File.ReadAllText("DefaultLayout.json");
                 Manager.LoadLayoutFromJson(json);
@@ -152,6 +157,14 @@ namespace CommandBar.DemoApp
                 cmd.DisplayMode = CommandDisplayMode.ImageAndText;
                 parentMenu.ChildItems.Add(cmd);
             }
+        }
+
+        // Add this method anywhere in MainViewModel
+        public void SaveCurrentLayout()
+        {
+            string json = Manager.SaveLayoutToJson();
+            // Save to the user-specific file, leaving the DefaultLayout.json intact
+            File.WriteAllText("user_layout.json", json);
         }
     }
 }
