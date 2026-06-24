@@ -52,7 +52,8 @@ namespace CommandBar.Core.Models
             item.DefaultText = item.Text;
             item.DefaultTooltip = item.Tooltip;
             item.DefaultIconGeometry = item.IconGeometry;
-
+            item.DefaultKeepOriginalColors= item.KeepOriginalColors;
+            item.DefaultRawSvgContent = item.RawSvgContent;
             item.PropertyChanged += MasterCommand_PropertyChanged;
             _masterCommandRegistry[commandId] = item;
         }
@@ -239,7 +240,9 @@ namespace CommandBar.Core.Models
                     Id = cmd.Id,
                     Text = cmd.Text,
                     Tooltip = cmd.Tooltip,
-                    IconGeometry = cmd.IconGeometry
+                    IconGeometry = cmd.IconGeometry,
+                    KeepOriginalColors = cmd.KeepOriginalColors,
+                    RawSvgContent = cmd.RawSvgContent
                 });
             }
             return JsonSerializer.Serialize(dtoList, new JsonSerializerOptions { WriteIndented = true });
@@ -260,6 +263,8 @@ namespace CommandBar.Core.Models
                     existingCmd.Text = dto.Text;
                     existingCmd.Tooltip = dto.Tooltip;
                     existingCmd.IconGeometry = dto.IconGeometry;
+                    existingCmd.KeepOriginalColors = dto.KeepOriginalColors;
+                    existingCmd.RawSvgContent = dto.RawSvgContent;
                 }
             }
         }
@@ -404,6 +409,9 @@ namespace CommandBar.Core.Models
         public string Text { get; set; } = string.Empty;
         public string Tooltip { get; set; } = string.Empty;
         public string IconGeometry { get; set; } = string.Empty;
+        public bool KeepOriginalColors { get; set; } = false; // NEW
+        public string RawSvgContent { get; set; } = string.Empty; // NEW
+
     }
 
     public class ToolbarConfigDto

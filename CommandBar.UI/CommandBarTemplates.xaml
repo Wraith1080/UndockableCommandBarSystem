@@ -4,6 +4,7 @@
                     xmlns:controls="clr-namespace:CommandBar.UI.Controls">
     
     <controls:StringToPathConverter x:Key="PathConverter" />
+    <controls:RawSvgConverter x:Key="RawSvgConverter"/>
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     <Style x:Key="NativeMenuBarItemStyle" TargetType="MenuItem">
         <Setter Property="Header" Value="{Binding Text}"/>
@@ -33,7 +34,35 @@
         <Button x:Name="RootButton" Command="{Binding ExecuteItemCommand}" Focusable="False" ToolTip="{Binding Tooltip}" 
                 Background="Transparent" BorderThickness="0" Margin="1" Padding="4,2" Visibility="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <StackPanel Orientation="Horizontal">
-                <Path x:Name="IconPath" Data="{Binding IconGeometry}" Fill="#444" Width="16" Height="16" Stretch="Uniform" Margin="0,0,4,0"/>
+                <Grid x:Name="IconPath" Width="16" Height="16" Margin="0,0,4,0">
+
+                    <Path Data="{Binding IconGeometry}" Fill="#444" Stretch="Uniform">
+                        <Path.Style>
+                            <Style TargetType="Path">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding KeepOriginalColors}" Value="False">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Path.Style>
+                    </Path>
+
+                    <Image Source="{Binding RawSvgContent, Converter={StaticResource RawSvgConverter}}">
+                        <Image.Style>
+                            <Style TargetType="Image">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding KeepOriginalColors}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Image.Style>
+                    </Image>
+
+                </Grid>
                 <AccessText x:Name="LabelText" Text="{Binding Text}" VerticalAlignment="Center"/>
             </StackPanel>
         </Button>
@@ -69,7 +98,35 @@
         <ToggleButton x:Name="RootButton" IsChecked="{Binding IsChecked, Mode=TwoWay}" Command="{Binding ExecuteItemCommand}" 
                       Focusable="False" ToolTip="{Binding Tooltip}" Background="Transparent" BorderThickness="0" Margin="1" Padding="4,2" Visibility="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <StackPanel Orientation="Horizontal">
-                <Path x:Name="IconPath" Data="{Binding IconGeometry}" Fill="#444" Width="16" Height="16" Stretch="Uniform" Margin="0,0,4,0"/>
+                <Grid x:Name="IconPath" Width="16" Height="16" Margin="0,0,4,0">
+
+                    <Path Data="{Binding IconGeometry}" Fill="#444" Stretch="Uniform">
+                        <Path.Style>
+                            <Style TargetType="Path">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding KeepOriginalColors}" Value="False">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Path.Style>
+                    </Path>
+
+                    <Image Source="{Binding RawSvgContent, Converter={StaticResource RawSvgConverter}}">
+                        <Image.Style>
+                            <Style TargetType="Image">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding KeepOriginalColors}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Image.Style>
+                    </Image>
+
+                </Grid>
                 <AccessText x:Name="LabelText" Text="{Binding Text}" VerticalAlignment="Center"/>
             </StackPanel>
         </ToggleButton>
@@ -113,7 +170,35 @@
 
                 <MenuItem.Header>
                     <StackPanel Orientation="Horizontal">
-                        <Path x:Name="IconPath" Data="{Binding IconGeometry}" Fill="#444" Width="16" Height="16" Stretch="Uniform" Margin="0,0,4,0"/>
+                        <Grid x:Name="IconPath" Width="16" Height="16" Margin="0,0,4,0">
+
+                            <Path Data="{Binding IconGeometry}" Fill="#444" Stretch="Uniform">
+                                <Path.Style>
+                                    <Style TargetType="Path">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding KeepOriginalColors}" Value="False">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Path.Style>
+                            </Path>
+
+                            <Image Source="{Binding RawSvgContent, Converter={StaticResource RawSvgConverter}}">
+                                <Image.Style>
+                                    <Style TargetType="Image">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding KeepOriginalColors}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Image.Style>
+                            </Image>
+
+                        </Grid>
                         <AccessText x:Name="LabelText" Text="{Binding Text}" VerticalAlignment="Center"/>
 
                         <Path x:Name="DropdownArrow" Data="M 0,0 L 4,4 L 8,0 Z" Fill="#444" VerticalAlignment="Center" Margin="4,2,0,0"/>

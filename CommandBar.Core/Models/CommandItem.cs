@@ -43,6 +43,25 @@ namespace CommandBar.Core.Models
         public string DefaultTooltip { get; set; } = string.Empty;
         public string DefaultIconGeometry { get; set; } = string.Empty;
 
+        private bool _keepOriginalColors;
+        public bool KeepOriginalColors
+        {
+            get => _keepOriginalColors;
+            set => SetProperty(ref _keepOriginalColors, value);
+        }
+
+        // 🟢 NEW: The Raw XML string for SharpVectors
+        private string _rawSvgContent = string.Empty;
+        public string RawSvgContent
+        {
+            get => _rawSvgContent;
+            set => SetProperty(ref _rawSvgContent, value);
+        }
+
+        // 🟢 NEW: Factory defaults for the Reset button
+        public bool DefaultKeepOriginalColors { get; set; }
+        public string DefaultRawSvgContent { get; set; } = string.Empty;
+
         public virtual CommandItem Clone()
         {
             return new CommandItem

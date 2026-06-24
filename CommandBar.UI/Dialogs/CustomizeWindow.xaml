@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:models="clr-namespace:CommandBar.Core.Models;assembly=CommandBar.Core"
-        Title="Customize Toolbars" Height="620" Width="580"
+        Title="Customize Toolbars" Height="640" Width="580"
         WindowStyle="ToolWindow" ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <ResourceDictionary>
@@ -138,6 +138,7 @@
                                     <ContentControl Content="{Binding IconGeometry, Converter={StaticResource PathConverter}}" 
                                                     Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
+                                <CheckBox IsChecked="{Binding KeepOriginalColors}" Content="Keep Original Colors" Margin="0,15,0,0"/>
                                 <Button Content="Reset Command to Default" Width="160" Height="26" Margin="0,15,0,0" 
                                         HorizontalAlignment="Left" Click="ResetCommand_Click" Cursor="Hand"/>
                             </StackPanel>

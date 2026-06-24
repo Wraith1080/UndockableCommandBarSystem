@@ -155,16 +155,20 @@ namespace CommandBar.UI.Dialogs
                     {
                         string svgContent = System.IO.File.ReadAllText(dialog.FileName);
 
-                        // Extract the vector data from the d="..." attribute
-                        var match = Regex.Match(svgContent, @"d=""([^""]+)""");
-                        if (match.Success)
+                        // 1. Save the raw file for SharpVectors
+                        selectedCmd.RawSvgContent = svgContent;
+
+                        // 2. Keep the F1 extraction for the Monochrome fallback
+                        var matches = Regex.Matches(svgContent, @"d=(?:""|')([^""']+)(?:""|')");
+                        if (matches.Count > 0)
                         {
-                            selectedCmd.IconGeometry = match.Groups[1].Value;
+                            var allPaths = new System.Collections.Generic.List<string>();
+                            foreach (Match m in matches) allPaths.Add(m.Groups[1].Value);
+                            selectedCmd.IconGeometry = "F1 " + string.Join(" ", allPaths);
                         }
-                        else
-                        {
-                            MessageBox.Show("Could not find a valid vector path (d=\"...\") in this SVG file.", "Invalid SVG", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        }
+
+                        // 3. Auto-check the toggle for them!
+                        selectedCmd.KeepOriginalColors = true;
                     }
                     catch (Exception ex)
                     {
@@ -182,6 +186,8 @@ namespace CommandBar.UI.Dialogs
                 selectedCmd.Text = selectedCmd.DefaultText;
                 selectedCmd.Tooltip = selectedCmd.DefaultTooltip;
                 selectedCmd.IconGeometry = selectedCmd.DefaultIconGeometry;
+                selectedCmd.RawSvgContent = selectedCmd.DefaultRawSvgContent;
+                selectedCmd.KeepOriginalColors = selectedCmd.DefaultKeepOriginalColors;
             }
         }
 
