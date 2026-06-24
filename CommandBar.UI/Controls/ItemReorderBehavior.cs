@@ -134,10 +134,20 @@ namespace CommandBar.UI.Controls
 
                 // 3. Move the data in the underlying ObservableCollection!
                 int oldIndex = model.DockedItems.IndexOf(droppedData);
-                if (oldIndex >= 0 && oldIndex != insertIndex && oldIndex != insertIndex - 1)
+
+                if (oldIndex >= 0)
                 {
-                    if (oldIndex < insertIndex) insertIndex--; // Shift index back if we are moving forward
-                    model.DockedItems.Move(oldIndex, insertIndex);
+                    // The item is already on this toolbar, we are just reordering it
+                    if (oldIndex != insertIndex && oldIndex != insertIndex - 1)
+                    {
+                        if (oldIndex < insertIndex) insertIndex--; // Shift index back if we are moving forward
+                        model.DockedItems.Move(oldIndex, insertIndex);
+                    }
+                }
+                else
+                {
+                    // 🟢 FIX: The item is brand new from the Customize Dialog (oldIndex == -1). Add it!
+                    model.DockedItems.Insert(insertIndex, droppedData);
                 }
             }
         }

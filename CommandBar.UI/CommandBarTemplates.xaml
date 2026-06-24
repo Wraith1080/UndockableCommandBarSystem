@@ -28,6 +28,7 @@
             </DataTrigger>
         </Style.Triggers>
     </Style>
+    
     <DataTemplate DataType="{x:Type models:CommandItem}">
         <Button x:Name="RootButton" Command="{Binding ExecuteItemCommand}" Focusable="False" ToolTip="{Binding Tooltip}" 
                 Background="Transparent" BorderThickness="0" Margin="1" Padding="4,2" Visibility="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -101,7 +102,9 @@
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type models:CommandSeparator}">
-        <Separator Width="1" Margin="2,4" Background="#CCC" Visibility="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+        <Border Width="1" Background="#CCC" Margin="2,4" 
+                HorizontalAlignment="Center" VerticalAlignment="Stretch"
+                Visibility="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type models:CommandDropdownItem}">

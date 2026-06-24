@@ -12,6 +12,9 @@ namespace CommandBar.Core.Models
         // THE MASTER REGISTRY: Holds the pure definition of every button/action in the app
         private readonly Dictionary<string, CommandItem> _masterCommandRegistry = new();
 
+        // 🟢 NEW: A shortcut for the UI to find the Main Menu
+        public ToolbarModel? MainMenuBar => AllToolbars.FirstOrDefault(t => t.IsMenuBar);
+
         // REPLACE _activeToolbars WITH THESE 4 LISTS
         public ObservableCollection<ToolbarModel> TopToolbars { get; } = new();
         public ObservableCollection<ToolbarModel> BottomToolbars { get; } = new();
@@ -31,7 +34,9 @@ namespace CommandBar.Core.Models
         // NEW: A delegate that the UI layer will hook into
         public Action? OpenCustomizeDialogAction { get; set; }
 
-        public System.Collections.Generic.IEnumerable<CommandItem> AvailableCommands => _masterCommandRegistry.Values;
+        // 🟢 UPDATED: Filter out separators so they don't show up in the Customize Dialog lists!
+        public IEnumerable<CommandItem> AvailableCommands =>
+            _masterCommandRegistry.Values.Where(cmd => !(cmd is CommandSeparator));
 
         /// <summary>
         /// Registers a command into the master dictionary. 
@@ -138,12 +143,25 @@ namespace CommandBar.Core.Models
                 }
 
                 // Inside LoadLayoutFromJson(), replacing step 3 & 4:
+                // Inside LoadLayoutFromJson:
                 foreach (var commandId in tbConfig.Items)
                 {
-                    var commandToInject = GetCommand(commandId);
+                    CommandItem? commandToInject = null;
+
+                    // 🟢 FIX: Is this a dynamically generated separator?
+                    if (commandId.StartsWith("SEP_"))
+                    {
+                        commandToInject = new CommandSeparator { Id = commandId };
+                    }
+                    else
+                    {   
+                        // Otherwise, fetch it from the master registry
+                        commandToInject = GetCommand(commandId);
+                    }
+
                     if (commandToInject != null)
                     {
-                        // NEW: Did the user hide this button during their last session?
+                        // Did the user hide this button/separator during their last session?
                         if (tbConfig.HiddenItems != null && tbConfig.HiddenItems.Contains(commandId))
                         {
                             commandToInject.IsVisible = false;
@@ -276,6 +294,16 @@ namespace CommandBar.Core.Models
                 foreach (var commandId in defaultConfig.Items)
                 {
                     var cmd = GetCommand(commandId);
+
+                    if (commandId.StartsWith("SEP_"))
+                    {
+                        cmd = new CommandSeparator { Id = commandId };
+                    }
+                    else
+                    {
+                        cmd = GetCommand(commandId);
+                    }
+
                     if (cmd != null)
                     {
                         cmd.IsVisible = true; // Ensure it is un-hidden

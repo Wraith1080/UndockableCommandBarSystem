@@ -23,7 +23,7 @@
         "App.Cut",
         "App.Copy",
         "App.PasteMenu",
-        "App.Separator",
+        "SEP_Edit_1",
         "App.Undo",
         "App.Redo"
       ]

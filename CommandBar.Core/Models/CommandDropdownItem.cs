@@ -4,7 +4,8 @@ namespace CommandBar.Core.Models
 {
     public class CommandDropdownItem : CommandItem
     {
-        public ObservableCollection<CommandItem> ChildItems { get; } = new();
+        // We keep it read-only (no set;), but we initialize it immediately!
+        public ObservableCollection<CommandItem> ChildItems { get; } = new ObservableCollection<CommandItem>();
 
         public override CommandItem Clone()
         {
