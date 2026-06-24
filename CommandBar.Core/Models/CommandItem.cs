@@ -39,6 +39,10 @@ namespace CommandBar.Core.Models
             set => SetProperty(ref _isVisible, value);
         }
 
+        public string DefaultText { get; set; } = string.Empty;
+        public string DefaultTooltip { get; set; } = string.Empty;
+        public string DefaultIconGeometry { get; set; } = string.Empty;
+
         public virtual CommandItem Clone()
         {
             return new CommandItem

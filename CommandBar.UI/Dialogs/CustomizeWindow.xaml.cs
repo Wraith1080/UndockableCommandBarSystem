@@ -172,6 +172,17 @@ namespace CommandBar.UI.Dialogs
             }
         }
 
+        private void ResetCommand_Click(object sender, RoutedEventArgs e)
+        {
+            if (MasterCommandList.SelectedItem is CommandItem selectedCmd)
+            {
+                // Restoring these fires the PropertyChanged event automatically!
+                selectedCmd.Text = selectedCmd.DefaultText;
+                selectedCmd.Tooltip = selectedCmd.DefaultTooltip;
+                selectedCmd.IconGeometry = selectedCmd.DefaultIconGeometry;
+            }
+        }
+
         private static T? FindAncestor<T>(DependencyObject current) where T : DependencyObject
         {
             while (current != null)

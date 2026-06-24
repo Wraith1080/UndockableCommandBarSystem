@@ -41,9 +41,14 @@ namespace CommandBar.Core.Models
         {
             if (string.IsNullOrWhiteSpace(commandId)) throw new ArgumentException("Command ID cannot be empty.");
 
-            // Store the ID inside the item so it knows its own identity
             item.Id = commandId;
 
+            // 🟢 NEW: Capture the factory defaults right as it enters the registry!
+            item.DefaultText = item.Text;
+            item.DefaultTooltip = item.Tooltip;
+            item.DefaultIconGeometry = item.IconGeometry;
+
+            item.PropertyChanged += MasterCommand_PropertyChanged;
             _masterCommandRegistry[commandId] = item;
         }
 
@@ -315,15 +320,23 @@ namespace CommandBar.Core.Models
         {
             if (sender is CommandItem masterCmd)
             {
-                // Only sync visual properties, ignore state properties like IsVisible
                 if (e.PropertyName == nameof(CommandItem.Text) ||
                     e.PropertyName == nameof(CommandItem.Tooltip) ||
                     e.PropertyName == nameof(CommandItem.IconGeometry))
                 {
-                    // Sweep through every instantiated toolbar
+                    // 1. Sweep every instantiated toolbar
                     foreach (var tb in AllToolbars)
                     {
                         UpdateClonesRecursive(tb.DockedItems, masterCmd, e.PropertyName);
+                    }
+
+                    // 2. 🟢 NEW: Sweep the Master Registry to update nested Menu drop-downs!
+                    foreach (var registryCmd in _masterCommandRegistry.Values)
+                    {
+                        if (registryCmd is CommandDropdownItem dropdown && dropdown.ChildItems != null)
+                        {
+                            UpdateClonesRecursive(dropdown.ChildItems, masterCmd, e.PropertyName);
+                        }
                     }
                 }
             }
