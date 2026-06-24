@@ -55,6 +55,9 @@ namespace CommandBar.UI.Controls
             AllowDrop = true;
             // NEW: Prevent the toolbar background and drag-grip from accepting focus
             Focusable = false;
+
+            // 🟢 NEW: Listen for ANY menu item click that bubbles up from the popup
+            this.AddHandler(System.Windows.Controls.MenuItem.ClickEvent, new System.Windows.RoutedEventHandler(OnMenuItemClick));
         }
 
         // NEW: Keep track of the active ghost so we can remove it later
@@ -553,6 +556,19 @@ namespace CommandBar.UI.Controls
             if (mousePos.X > dockContainer.ActualWidth - edgeThickness) return DockLocation.Right;
 
             return DockLocation.Floating;
+        }
+
+        private void OnMenuItemClick(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (e.OriginalSource is System.Windows.Controls.MenuItem menuItem)
+            {
+                // WPF Magic: We explicitly set StaysOpenOnClick="True" on our checkboxes earlier!
+                // If it is a checkbox, we ignore it. If it is the Customize or Reset button, we snap the popup shut!
+                if (!menuItem.StaysOpenOnClick)
+                {
+                    this.IsOverflowOpen = false;
+                }
+            }
         }
     }
 }
