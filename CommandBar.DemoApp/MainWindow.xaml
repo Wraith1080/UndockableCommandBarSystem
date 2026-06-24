@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:CommandBar.DemoApp"
         xmlns:controls="clr-namespace:CommandBar.UI.Controls;assembly=CommandBar.UI"
-        Title="Undockable CommandBar System" Height="600" Width="900">
+        Title="Undockable CommandBar System" Height="600" Width="900" WindowStartupLocation="CenterScreen">
 
     <Window.DataContext>
         <local:MainViewModel />

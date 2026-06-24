@@ -20,6 +20,9 @@ namespace CommandBar.DemoApp
 
         private Window? _customizeDialogInstance;
 
+        // Command to reset a specific toolbar
+        public RelayCommand<ToolbarModel> ResetToolbarCommand { get; }
+
         // Command to open the dialog
         public RelayCommand OpenCustomizeDialogCommand { get; }
 
@@ -56,20 +59,58 @@ namespace CommandBar.DemoApp
                 _customizeDialogInstance.Show();
             };
 
+            // 🟢 THE FIX: Teach the application how to instantly recreate a floating window on launch!
+            Manager.RestoreFloatingWindowAction = (toolbarModel) =>
+            {
+                var floatingWindow = new CommandBar.UI.Controls.FloatingToolBarWindow();
+                var floatingBar = new CommandBar.UI.Controls.UndockableToolBar();
+
+                floatingBar.DataContext = toolbarModel;
+                floatingBar.IsMenuBar = toolbarModel.IsMenuBar;
+                floatingWindow.OriginalToolBar = floatingBar; // Self-reference so redocking works!
+
+                if (Application.Current.MainWindow != null)
+                {
+                    floatingWindow.Owner = Application.Current.MainWindow;
+                    floatingBar.SetBinding(CommandBar.UI.Controls.UndockableToolBar.IsCustomizeModeProperty,
+                        new System.Windows.Data.Binding("DataContext.Manager.IsCustomizeMode") { Source = Application.Current.MainWindow });
+                }
+
+                // Reconstruct the internal menu/items structure
+                if (toolbarModel.IsMenuBar)
+                {
+                    var nativeMenu = new System.Windows.Controls.Menu { Background = System.Windows.Media.Brushes.Transparent };
+                    nativeMenu.SetBinding(System.Windows.Controls.ItemsControl.ItemsSourceProperty, new System.Windows.Data.Binding("DockedItems") { Source = toolbarModel });
+                    nativeMenu.SetResourceReference(System.Windows.Controls.ItemsControl.ItemContainerStyleProperty, "NativeMenuBarItemStyle");
+                    floatingBar.Items.Add(nativeMenu);
+                }
+                else
+                {
+                    floatingBar.SetBinding(System.Windows.Controls.ItemsControl.ItemsSourceProperty, new System.Windows.Data.Binding("DockedItems") { Source = toolbarModel });
+                }
+
+                System.Windows.Input.FocusManager.SetIsFocusScope(floatingBar, false);
+                floatingWindow.Content = floatingBar;
+
+                // Restore exact coordinates!
+                floatingWindow.Left = toolbarModel.FloatingLeft;
+                floatingWindow.Top = toolbarModel.FloatingTop;
+                floatingWindow.Show();
+            };
+
             // Hook up the button command to trigger the Manager
             OpenCustomizeDialogCommand = new RelayCommand(Manager.ShowCustomizeDialog);
 
-            // 2. LOAD THE JSON LAYOUT FILE
-            if (File.Exists("user_layout.json"))
+            // Initialize the Reset Command
+            ResetToolbarCommand = new RelayCommand<ToolbarModel>(toolbar =>
             {
-                string json = File.ReadAllText("user_layout.json");
-                Manager.LoadLayoutFromJson(json);
-            }
-            else if (File.Exists("DefaultLayout.json"))
-            {
-                string json = File.ReadAllText("DefaultLayout.json");
-                Manager.LoadLayoutFromJson(json);
-            }
+                if (toolbar != null && File.Exists("DefaultLayout.json"))
+                {
+                    string json = File.ReadAllText("DefaultLayout.json");
+                    Manager.ResetToolbar(toolbar, json);
+                }
+            });
+
         }
 
         private void RegisterAllAppCommands()
@@ -165,6 +206,21 @@ namespace CommandBar.DemoApp
             string json = Manager.SaveLayoutToJson();
             // Save to the user-specific file, leaving the DefaultLayout.json intact
             File.WriteAllText("user_layout.json", json);
+        }
+
+        // Add this anywhere in your MainViewModel class
+        public void InitializeLayout()
+        {
+            if (File.Exists("user_layout.json"))
+            {
+                string json = File.ReadAllText("user_layout.json");
+                Manager.LoadLayoutFromJson(json);
+            }
+            else if (File.Exists("DefaultLayout.json"))
+            {
+                string json = File.ReadAllText("DefaultLayout.json");
+                Manager.LoadLayoutFromJson(json);
+            }
         }
     }
 }

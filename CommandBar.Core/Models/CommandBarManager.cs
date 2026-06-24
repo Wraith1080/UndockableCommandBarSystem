@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text.Json; // REQUIRED FOR JSON
+using System.Linq;
 
 namespace CommandBar.Core.Models
 {
@@ -16,6 +17,10 @@ namespace CommandBar.Core.Models
         public ObservableCollection<ToolbarModel> BottomToolbars { get; } = new();
         public ObservableCollection<ToolbarModel> LeftToolbars { get; } = new();
         public ObservableCollection<ToolbarModel> RightToolbars { get; } = new();
+
+        // 🟢 NEW: The Missing Floating List & UI Trigger
+        public ObservableCollection<ToolbarModel> FloatingToolbars { get; } = new();
+        public Action<ToolbarModel>? RestoreFloatingWindowAction { get; set; }
 
         // The Master Switch that unlocks toolbars for dragging
         [ObservableProperty]
@@ -76,6 +81,7 @@ namespace CommandBar.Core.Models
                 case DockLocation.Bottom: BottomToolbars.Add(toolbar); break;
                 case DockLocation.Left: LeftToolbars.Add(toolbar); break;
                 case DockLocation.Right: RightToolbars.Add(toolbar); break;
+                case DockLocation.Floating: FloatingToolbars.Add(toolbar); break; // NEW
             }
 
             return toolbar;
@@ -101,13 +107,27 @@ namespace CommandBar.Core.Models
                 Enum.TryParse(tbConfig.Dock, true, out DockLocation parsedDock);
                 var toolbar = CreateToolbar(tbConfig.Name, parsedDock, tbConfig.Band, tbConfig.BandIndex, tbConfig.IsMenuBar);
 
-                // 3. Loop through the string IDs in the JSON
+                // 🟢 NEW: Restore coordinates and trigger the window spawn!
+                toolbar.FloatingLeft = tbConfig.FloatingLeft;
+                toolbar.FloatingTop = tbConfig.FloatingTop;
+
+                if (parsedDock == DockLocation.Floating)
+                {
+                    RestoreFloatingWindowAction?.Invoke(toolbar);
+                }
+
+                // Inside LoadLayoutFromJson(), replacing step 3 & 4:
                 foreach (var commandId in tbConfig.Items)
                 {
-                    // 4. Look up the ID in the Master Registry, clone it, and inject it!
                     var commandToInject = GetCommand(commandId);
                     if (commandToInject != null)
                     {
+                        // NEW: Did the user hide this button during their last session?
+                        if (tbConfig.HiddenItems != null && tbConfig.HiddenItems.Contains(commandId))
+                        {
+                            commandToInject.IsVisible = false;
+                        }
+
                         toolbar.DockedItems.Add(commandToInject);
                     }
                 }
@@ -131,8 +151,10 @@ namespace CommandBar.Core.Models
                         BandIndex = tb.BandIndex,
                         IsMenuBar = tb.IsMenuBar,
                         Dock = tb.DockLocation.ToString(),
-                        // Extract only the string IDs of the commands!
-                        Items = new List<string>()
+                        FloatingLeft = tb.FloatingLeft, // NEW
+                        FloatingTop = tb.FloatingTop,   // NEW
+                        Items = new List<string>(),
+                        HiddenItems = new List<string>() // Initialize it
                     };
 
                     foreach (var item in tb.DockedItems)
@@ -140,6 +162,12 @@ namespace CommandBar.Core.Models
                         if (!string.IsNullOrEmpty(item.Id))
                         {
                             config.Items.Add(item.Id);
+
+                            // NEW: If they unchecked it, log it!
+                            if (!item.IsVisible)
+                            {
+                                config.HiddenItems.Add(item.Id);
+                            }
                         }
                     }
 
@@ -152,10 +180,50 @@ namespace CommandBar.Core.Models
             ProcessToolbars(BottomToolbars);
             ProcessToolbars(LeftToolbars);
             ProcessToolbars(RightToolbars);
+            ProcessToolbars(FloatingToolbars);
 
             // Serialize with nice indentation so users can read/edit it manually if they want to
             var options = new JsonSerializerOptions { WriteIndented = true };
             return JsonSerializer.Serialize(layout, options);
+        }
+
+        // --- NEW: THE RESET ENGINE ---
+        public void ResetToolbar(ToolbarModel toolbar, string defaultJsonString)
+        {
+            if (toolbar == null || string.IsNullOrWhiteSpace(defaultJsonString)) return;
+
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var layout = JsonSerializer.Deserialize<LayoutFileDto>(defaultJsonString, options);
+
+            if (layout?.Toolbars == null) return;
+
+            // Find the "Factory Settings" for this specific toolbar
+            var defaultConfig = layout.Toolbars.FirstOrDefault(t => t.Name == toolbar.Name);
+            if (defaultConfig != null)
+            {
+                // 1. Reset Position
+                toolbar.Band = defaultConfig.Band;
+                toolbar.BandIndex = defaultConfig.BandIndex;
+                Enum.TryParse(defaultConfig.Dock, true, out DockLocation parsedDock);
+
+                // If the dock changed, request a move so the UI updates!
+                if (toolbar.DockLocation != parsedDock)
+                {
+                    toolbar.RequestDockChange(parsedDock);
+                }
+
+                // 2. Reset Buttons
+                toolbar.DockedItems.Clear();
+                foreach (var commandId in defaultConfig.Items)
+                {
+                    var cmd = GetCommand(commandId);
+                    if (cmd != null)
+                    {
+                        cmd.IsVisible = true; // Ensure it is un-hidden
+                        toolbar.DockedItems.Add(cmd);
+                    }
+                }
+            }
         }
 
         // NEW: Plucks the toolbar out of its old list and puts it in the new one!
@@ -165,6 +233,7 @@ namespace CommandBar.Core.Models
             BottomToolbars.Remove(toolbar);
             LeftToolbars.Remove(toolbar);
             RightToolbars.Remove(toolbar);
+            FloatingToolbars.Remove(toolbar); // NEW
 
             toolbar.DockLocation = newDock;
 
@@ -174,6 +243,7 @@ namespace CommandBar.Core.Models
                 case DockLocation.Bottom: BottomToolbars.Add(toolbar); break;
                 case DockLocation.Left: LeftToolbars.Add(toolbar); break;
                 case DockLocation.Right: RightToolbars.Add(toolbar); break;
+                case DockLocation.Floating: FloatingToolbars.Add(toolbar); break; // NEW
             }
         }
 
@@ -199,7 +269,13 @@ namespace CommandBar.Core.Models
         public int Band { get; set; }
         public int BandIndex { get; set; }
         public bool IsMenuBar { get; set; }
-        public string Dock { get; set; } = "Top"; // NEW: JSON will pass "Top", "Left", etc.
+        public string Dock { get; set; } = "Top";
         public List<string> Items { get; set; } = new();
+
+        // NEW: Keep track of buttons the user unchecked!
+        public List<string> HiddenItems { get; set; } = new();
+
+        public double FloatingLeft { get; set; } // NEW
+        public double FloatingTop { get; set; }  // NEW
     }
 }

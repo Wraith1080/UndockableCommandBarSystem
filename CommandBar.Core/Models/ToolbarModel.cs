@@ -24,6 +24,20 @@ namespace CommandBar.Core.Models
         [ObservableProperty]
         private DockLocation _dockLocation = DockLocation.Top;
 
+        private double _floatingLeft;
+        public double FloatingLeft
+        {
+            get => _floatingLeft;
+            set => SetProperty(ref _floatingLeft, value);
+        }
+
+        private double _floatingTop;
+        public double FloatingTop
+        {
+            get => _floatingTop;
+            set => SetProperty(ref _floatingTop, value);
+        }
+
         // The actual buttons currently sitting inside this specific toolbar
         public ObservableCollection<CommandItem> DockedItems { get; } = new();
 

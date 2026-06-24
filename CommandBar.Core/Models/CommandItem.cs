@@ -31,6 +31,14 @@ namespace CommandBar.Core.Models
         // NEW: Allows native menus to know if this is a separator without using a DataTemplate
         public virtual bool IsSeparator => false;
 
+        // Add this to your existing CommandItem.cs
+        private bool _isVisible = true;
+        public bool IsVisible
+        {
+            get => _isVisible;
+            set => SetProperty(ref _isVisible, value);
+        }
+
         public virtual CommandItem Clone()
         {
             return new CommandItem

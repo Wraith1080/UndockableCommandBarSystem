@@ -8,13 +8,20 @@ namespace CommandBar.DemoApp
         public MainWindow()
         {
             InitializeComponent();
+
+            // 🟢 NEW: Wait until the window is fully built before loading the layout!
+            this.Loaded += (s, e) =>
+            {
+                if (this.DataContext is MainViewModel vm)
+                {
+                    vm.InitializeLayout();
+                }
+            };
         }
 
         protected override void OnClosed(EventArgs e)
         {
             base.OnClosed(e);
-
-            // Grab the ViewModel and tell it to save the layout before shutting down!
             if (this.DataContext is MainViewModel vm)
             {
                 vm.SaveCurrentLayout();

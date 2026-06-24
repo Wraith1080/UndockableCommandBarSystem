@@ -183,6 +183,7 @@ namespace CommandBar.UI.Controls
             var mainWindow = Window.GetWindow(this);
             if (mainWindow != null)
             {
+                floatingWindow.Owner = mainWindow;
                 floatingBar.SetBinding(UndockableToolBar.IsCustomizeModeProperty, new Binding("DataContext.Manager.IsCustomizeMode")
                 {
                     Source = mainWindow

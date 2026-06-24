@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CommandBar.Core.Models;
+using System;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
@@ -102,6 +103,13 @@ namespace CommandBar.UI.Controls
 
                 this.Left = logicalPos.X - _dragOffsetX;
                 this.Top = logicalPos.Y - _dragOffsetY;
+
+                // 🟢 NEW: Save the physical location back to the Model!
+                if (OriginalToolBar?.DataContext is ToolbarModel model)
+                {
+                    model.FloatingLeft = this.Left;
+                    model.FloatingTop = this.Top;
+                }
 
                 OriginalToolBar?.UpdateGhostAdorner(this);
             }

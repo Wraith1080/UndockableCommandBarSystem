@@ -34,14 +34,12 @@
                                     <ControlTemplate TargetType="Thumb">
                                         <Border Background="Transparent">
                                             <Path x:Name="GripPath" Data="M 2,2 A 1,1 0 1,1 2,2.01 M 2,6 A 1,1 0 1,1 2,6.01 M 2,10 A 1,1 0 1,1 2,10.01 M 6,2 A 1,1 0 1,1 6,2.01 M 6,6 A 1,1 0 1,1 6,6.01 M 6,10 A 1,1 0 1,1 6,10.01" 
-                                                  Stroke="Gray" StrokeThickness="2" StrokeDashArray="0,0" Fill="Gray" Stretch="None" 
-                                                  VerticalAlignment="Center" HorizontalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+                                  Stroke="#999" StrokeThickness="2" StrokeDashArray="0,0" Fill="#999" Stretch="None" VerticalAlignment="Center" HorizontalAlignment="Center" RenderTransformOrigin="0.5,0.5">
                                                 <Path.RenderTransform>
                                                     <RotateTransform Angle="0" />
                                                 </Path.RenderTransform>
                                             </Path>
                                         </Border>
-
                                         <ControlTemplate.Triggers>
                                             <DataTrigger Binding="{Binding Orientation, RelativeSource={RelativeSource AncestorType={x:Type ToolBar}}}" Value="Vertical">
                                                 <Setter TargetName="GripPath" Property="RenderTransform">
@@ -51,22 +49,50 @@
                                                 </Setter>
                                             </DataTrigger>
                                         </ControlTemplate.Triggers>
-
                                     </ControlTemplate>
                                 </Thumb.Template>
                             </Thumb>
 
                             <ToggleButton x:Name="PART_OverflowButton" DockPanel.Dock="Right" 
-                                          IsChecked="{Binding IsOverflowOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
-                                          Padding="4,0" Background="Transparent" BorderThickness="0" Cursor="Hand">
-                                <Path Data="M 0,0 L 4,4 L 8,0" Stroke="#555555" StrokeThickness="2" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                          IsChecked="{Binding IsOverflowOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                          Padding="2" Background="Transparent" BorderThickness="0" Cursor="Hand">
+                                <Path x:Name="OverflowArrow" Data="M 0,0 L 4,4 L 8,0" Stroke="#777" StrokeThickness="2" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="2,0"/>
                             </ToggleButton>
 
                             <Popup x:Name="PART_OverflowPopup" AllowsTransparency="True" Placement="Bottom" 
-                                   PlacementTarget="{Binding ElementName=PART_OverflowButton}"
-                                   IsOpen="{Binding IsOverflowOpen, RelativeSource={RelativeSource TemplatedParent}}" StaysOpen="False" Focusable="False">
-                                <Border Background="#FAFAFA" BorderBrush="#D4D4D4" BorderThickness="1" Padding="4" Margin="0,2,0,0">
-                                    <ToolBarOverflowPanel x:Name="PART_ToolBarOverflowPanel" KeyboardNavigation.TabNavigation="Cycle" KeyboardNavigation.DirectionalNavigation="Cycle" />
+                   PlacementTarget="{Binding ElementName=PART_OverflowButton}"
+                   IsOpen="{Binding IsOverflowOpen, RelativeSource={RelativeSource TemplatedParent}}" StaysOpen="False" Focusable="False">
+                                <Border Background="#FAFAFA" BorderBrush="#D4D4D4" BorderThickness="1" Padding="2" Margin="0,2,0,0">
+                                    <StackPanel>
+
+                                        <ToolBarOverflowPanel x:Name="PART_ToolBarOverflowPanel" KeyboardNavigation.TabNavigation="Cycle" KeyboardNavigation.DirectionalNavigation="Cycle" />
+
+                                        <Separator x:Name="OverflowSeparator" Margin="0,2" Visibility="Collapsed"/>
+
+                                        <Menu Background="Transparent" Margin="2">
+                                            <MenuItem Header="Add or Remove Buttons">
+                                                <MenuItem.Icon>
+                                                    <Path Data="M 0,0 L 4,4 L 8,0 Z" Fill="#777" Width="6" Height="4" Stretch="Fill" VerticalAlignment="Center"/>
+                                                </MenuItem.Icon>
+                                                <MenuItem Header="{Binding Name}" ItemsSource="{Binding DockedItems}">
+                                                    <MenuItem.ItemContainerStyle>
+                                                        <Style TargetType="MenuItem">
+                                                            <Setter Property="Header" Value="{Binding Text}"/>
+                                                            <Setter Property="IsCheckable" Value="True"/>
+                                                            <Setter Property="IsChecked" Value="{Binding IsVisible, Mode=TwoWay}"/>
+                                                            <Setter Property="StaysOpenOnClick" Value="True"/>
+                                                        </Style>
+                                                    </MenuItem.ItemContainerStyle>
+                                                </MenuItem>
+                                                <Separator/>
+
+                                                <MenuItem Header="Reset Toolbar" Command="{Binding Path=MainWindow.DataContext.ResetToolbarCommand, Source={x:Static Application.Current}}" CommandParameter="{Binding}"/>
+
+                                                <Separator/>
+                                                <MenuItem Header="Customize..." Command="{Binding Path=MainWindow.DataContext.OpenCustomizeDialogCommand, Source={x:Static Application.Current}}"/>
+                                            </MenuItem>
+                                        </Menu>
+                                    </StackPanel>
                                 </Border>
                             </Popup>
 
@@ -76,9 +102,13 @@
                     </Border>
 
                     <ControlTemplate.Triggers>
-                        <Trigger Property="HasOverflowItems" Value="False">
-                            <Setter TargetName="PART_OverflowButton" Property="Visibility" Value="Collapsed" />
+                        <Trigger Property="HasOverflowItems" Value="True">
+                            <Setter TargetName="OverflowSeparator" Property="Visibility" Value="Visible" />
                         </Trigger>
+
+                        <DataTrigger Binding="{Binding IsMenuBar, RelativeSource={RelativeSource Self}}" Value="True">
+                            <Setter TargetName="PART_OverflowButton" Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
 
                         <Trigger Property="Orientation" Value="Vertical">
                             <Setter TargetName="ToolBarThumb" Property="DockPanel.Dock" Value="Top" />
@@ -89,9 +119,10 @@
                             <Setter TargetName="PART_OverflowButton" Property="DockPanel.Dock" Value="Bottom" />
                             <Setter TargetName="PART_ToolBarPanel" Property="Margin" Value="0,0,0,4" />
                             <Setter TargetName="PART_OverflowPopup" Property="Placement" Value="Right" />
+
+                            <Setter TargetName="OverflowArrow" Property="Data" Value="M 0,0 L 4,4 L 0,8" />
                         </Trigger>
                     </ControlTemplate.Triggers>
-
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
