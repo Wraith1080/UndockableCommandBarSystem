@@ -44,6 +44,38 @@ namespace CommandBar.UI.Dialogs
             }
         }
 
+        private void CreateNewToolbar_Click(object sender, RoutedEventArgs e)
+        {
+            string name = NewToolbarNameBox.Text.Trim();
+            if (string.IsNullOrWhiteSpace(name)) return;
+
+            // Because we set the DataContext to the Manager when opening this window, we can safely cast it!
+            if (this.DataContext is CommandBarManager manager)
+            {
+                // 1. Create a blank toolbar, defaulted to the Floating state
+                var newToolbar = manager.CreateToolbar(name, DockLocation.Floating, 0, 0, false);
+
+                // 2. Set its initial floating coordinates to be slightly offset from this dialog window
+                newToolbar.FloatingLeft = this.Left + 50;
+                newToolbar.FloatingTop = this.Top + 50;
+
+                // 3. Trigger the UI Action we built earlier to instantly summon the floating window!
+                manager.RestoreFloatingWindowAction?.Invoke(newToolbar);
+
+                // 4. Clean up the UI
+                NewToolbarNameBox.Clear();
+
+                // Optional: Swap the user immediately over to the Commands tab so they can start dragging!
+                if (NewToolbarNameBox.Parent is FrameworkElement parent &&
+                    VisualTreeHelper.GetParent(parent) is Grid grid &&
+                    VisualTreeHelper.GetParent(grid) is TabItem tabItem &&
+                    tabItem.Parent is TabControl tabControl)
+                {
+                    tabControl.SelectedIndex = 1;
+                }
+            }
+        }
+
         private static T? FindAncestor<T>(DependencyObject current) where T : DependencyObject
         {
             while (current != null)
