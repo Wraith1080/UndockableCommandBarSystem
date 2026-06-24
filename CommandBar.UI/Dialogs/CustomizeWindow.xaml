@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:models="clr-namespace:CommandBar.Core.Models;assembly=CommandBar.Core"
         Title="Customize Toolbars" Height="550" Width="580"
-        WindowStyle="ToolWindow" Topmost="True" ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterOwner">
+        WindowStyle="ToolWindow" ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
