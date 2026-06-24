@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows;
+using System.Windows.Data;
 
 namespace CommandBar.DemoApp
 {
@@ -95,6 +96,14 @@ namespace CommandBar.DemoApp
                 // Restore exact coordinates!
                 floatingWindow.Left = toolbarModel.FloatingLeft;
                 floatingWindow.Top = toolbarModel.FloatingTop;
+
+                // Hide the floating window if the user unchecks it in the dialog!
+                floatingWindow.SetBinding(Window.VisibilityProperty, new Binding("IsVisible")
+                {
+                    Source = toolbarModel,
+                    Converter = new System.Windows.Controls.BooleanToVisibilityConverter()
+                });
+
                 floatingWindow.Show();
             };
 

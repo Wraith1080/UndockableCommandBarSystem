@@ -223,6 +223,13 @@ namespace CommandBar.UI.Controls
             floatingWindow.Left = p.X - TearOffOffsetX;
             floatingWindow.Top = p.Y - TearOffOffsetY;
 
+            // Hide the floating window if the user unchecks it in the dialog!
+            floatingWindow.SetBinding(Window.VisibilityProperty, new Binding("IsVisible")
+            {
+                Source = this.DataContext,
+                Converter = new System.Windows.Controls.BooleanToVisibilityConverter()
+            });
+
             // 4. Show the window
             floatingWindow.Show();
 

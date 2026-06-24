@@ -44,34 +44,91 @@ namespace CommandBar.UI.Dialogs
             }
         }
 
-        private void CreateNewToolbar_Click(object sender, RoutedEventArgs e)
+        // --- INPUT OVERLAY LOGIC ---
+        private Action<string>? _inputCallback;
+
+        private void ShowInput(string prompt, string defaultText, Action<string> callback)
         {
-            string name = NewToolbarNameBox.Text.Trim();
-            if (string.IsNullOrWhiteSpace(name)) return;
+            InputPromptText.Text = prompt;
+            InputTextBox.Text = defaultText;
+            _inputCallback = callback;
+            InputOverlay.Visibility = Visibility.Visible;
+            InputTextBox.Focus();
+            InputTextBox.SelectAll();
+        }
 
-            // Because we set the DataContext to the Manager when opening this window, we can safely cast it!
-            if (this.DataContext is CommandBarManager manager)
+        private void InputOk_Click(object sender, RoutedEventArgs e)
+        {
+            InputOverlay.Visibility = Visibility.Collapsed;
+            _inputCallback?.Invoke(InputTextBox.Text.Trim());
+        }
+
+        private void InputCancel_Click(object sender, RoutedEventArgs e)
+        {
+            InputOverlay.Visibility = Visibility.Collapsed;
+        }
+
+        // --- BUTTON LOGIC ---
+        private void NewToolbar_Click(object sender, RoutedEventArgs e)
+        {
+            ShowInput("Enter new toolbar name:", "", (name) =>
             {
-                // 1. Create a blank toolbar, defaulted to the Floating state
-                var newToolbar = manager.CreateToolbar(name, DockLocation.Floating, 0, 0, false);
-
-                // 2. Set its initial floating coordinates to be slightly offset from this dialog window
-                newToolbar.FloatingLeft = this.Left + 50;
-                newToolbar.FloatingTop = this.Top + 50;
-
-                // 3. Trigger the UI Action we built earlier to instantly summon the floating window!
-                manager.RestoreFloatingWindowAction?.Invoke(newToolbar);
-
-                // 4. Clean up the UI
-                NewToolbarNameBox.Clear();
-
-                // Optional: Swap the user immediately over to the Commands tab so they can start dragging!
-                if (NewToolbarNameBox.Parent is FrameworkElement parent &&
-                    VisualTreeHelper.GetParent(parent) is Grid grid &&
-                    VisualTreeHelper.GetParent(grid) is TabItem tabItem &&
-                    tabItem.Parent is TabControl tabControl)
+                if (string.IsNullOrWhiteSpace(name)) return;
+                if (this.DataContext is CommandBarManager manager)
                 {
-                    tabControl.SelectedIndex = 1;
+                    // Pass true for IsCustom!
+                    var newTb = manager.CreateToolbar(name, DockLocation.Floating, 0, 0, false, true);
+                    newTb.FloatingLeft = this.Left + 50;
+                    newTb.FloatingTop = this.Top + 50;
+                    manager.RestoreFloatingWindowAction?.Invoke(newTb);
+                }
+            });
+        }
+
+        private void RenameToolbar_Click(object sender, RoutedEventArgs e)
+        {
+            if (ToolbarListBox.SelectedItem is ToolbarModel tb)
+            {
+                if (!tb.IsCustom)
+                {
+                    MessageBox.Show("You cannot rename default toolbars.", "Action Denied", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+                ShowInput("Rename toolbar:", tb.Name, (newName) =>
+                {
+                    if (!string.IsNullOrWhiteSpace(newName)) tb.Name = newName;
+                });
+            }
+        }
+
+        private void DeleteToolbar_Click(object sender, RoutedEventArgs e)
+        {
+            if (ToolbarListBox.SelectedItem is ToolbarModel tb)
+            {
+                if (!tb.IsCustom)
+                {
+                    MessageBox.Show("You cannot delete default toolbars.", "Action Denied", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+                if (this.DataContext is CommandBarManager manager)
+                {
+                    manager.DeleteToolbar(tb);
+                }
+            }
+        }
+
+        private void ResetToolbar_Click(object sender, RoutedEventArgs e)
+        {
+            if (ToolbarListBox.SelectedItem is ToolbarModel tb)
+            {
+                if (tb.IsCustom)
+                {
+                    MessageBox.Show("Custom toolbars do not have a factory default state.", "Action Denied", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+                if (this.DataContext is CommandBarManager manager && System.IO.File.Exists("DefaultLayout.json"))
+                {
+                    manager.ResetToolbar(tb, System.IO.File.ReadAllText("DefaultLayout.json"));
                 }
             }
         }

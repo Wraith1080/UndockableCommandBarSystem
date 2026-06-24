@@ -18,6 +18,8 @@ namespace CommandBar.Core.Models
         public ObservableCollection<ToolbarModel> LeftToolbars { get; } = new();
         public ObservableCollection<ToolbarModel> RightToolbars { get; } = new();
 
+        public ObservableCollection<ToolbarModel> AllToolbars { get; } = new();
+
         // 🟢 NEW: The Missing Floating List & UI Trigger
         public ObservableCollection<ToolbarModel> FloatingToolbars { get; } = new();
         public Action<ToolbarModel>? RestoreFloatingWindowAction { get; set; }
@@ -61,7 +63,7 @@ namespace CommandBar.Core.Models
         /// <summary>
         /// Creates a new empty toolbar and adds it to the active layout.
         /// </summary>
-        public ToolbarModel CreateToolbar(string name, DockLocation dock = DockLocation.Top, int row = 0, int index = 0, bool isMenuBar = false)
+        public ToolbarModel CreateToolbar(string name, DockLocation dock = DockLocation.Top, int row = 0, int index = 0, bool isMenuBar = false, bool isCustom = false)
         {
             var toolbar = new ToolbarModel
             {
@@ -69,8 +71,11 @@ namespace CommandBar.Core.Models
                 DockLocation = dock,
                 Band = row,
                 BandIndex = index,
-                IsMenuBar = isMenuBar
+                IsMenuBar = isMenuBar,
+                IsCustom = isCustom // 🟢 NEW
             };
+
+            AllToolbars.Add(toolbar); // 🟢 NEW
 
             toolbar.DockChangeRequested += MoveToolbar;
 
@@ -85,6 +90,16 @@ namespace CommandBar.Core.Models
             }
 
             return toolbar;
+        }
+        public void DeleteToolbar(ToolbarModel toolbar)
+        {
+            if (toolbar == null) return;
+            TopToolbars.Remove(toolbar);
+            BottomToolbars.Remove(toolbar);
+            LeftToolbars.Remove(toolbar);
+            RightToolbars.Remove(toolbar);
+            FloatingToolbars.Remove(toolbar);
+            AllToolbars.Remove(toolbar);
         }
 
         // --- NEW: THE JSON DESERIALIZATION ENGINE ---
@@ -105,8 +120,9 @@ namespace CommandBar.Core.Models
             foreach (var tbConfig in layout.Toolbars)
             {
                 Enum.TryParse(tbConfig.Dock, true, out DockLocation parsedDock);
-                var toolbar = CreateToolbar(tbConfig.Name, parsedDock, tbConfig.Band, tbConfig.BandIndex, tbConfig.IsMenuBar);
+                var toolbar = CreateToolbar(tbConfig.Name, parsedDock, tbConfig.Band, tbConfig.BandIndex, tbConfig.IsMenuBar, tbConfig.IsCustom);
 
+                toolbar.IsVisible = tbConfig.IsVisible;
                 // 🟢 NEW: Restore coordinates and trigger the window spawn!
                 toolbar.FloatingLeft = tbConfig.FloatingLeft;
                 toolbar.FloatingTop = tbConfig.FloatingTop;
@@ -153,6 +169,8 @@ namespace CommandBar.Core.Models
                         Dock = tb.DockLocation.ToString(),
                         FloatingLeft = tb.FloatingLeft, // NEW
                         FloatingTop = tb.FloatingTop,   // NEW
+                        IsVisible = tb.IsVisible, // 🟢 NEW
+                        IsCustom = tb.IsCustom,   // 🟢 NEW
                         Items = new List<string>(),
                         HiddenItems = new List<string>() // Initialize it
                     };
@@ -277,5 +295,8 @@ namespace CommandBar.Core.Models
 
         public double FloatingLeft { get; set; } // NEW
         public double FloatingTop { get; set; }  // NEW
+
+        public bool IsVisible { get; set; } = true;
+        public bool IsCustom { get; set; }
     }
 }

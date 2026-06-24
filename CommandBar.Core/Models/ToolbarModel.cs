@@ -38,6 +38,20 @@ namespace CommandBar.Core.Models
             set => SetProperty(ref _floatingTop, value);
         }
 
+        private bool _isVisible = true;
+        public bool IsVisible
+        {
+            get => _isVisible;
+            set => SetProperty(ref _isVisible, value);
+        }
+
+        private bool _isCustom;
+        public bool IsCustom
+        {
+            get => _isCustom;
+            set => SetProperty(ref _isCustom, value);
+        }
+
         // The actual buttons currently sitting inside this specific toolbar
         public ObservableCollection<CommandItem> DockedItems { get; } = new();
 

@@ -16,24 +16,27 @@
 
             <TabItem Header="Toolbars">
                 <Grid Margin="15">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="110"/>
+                    </Grid.ColumnDefinitions>
 
-                    <TextBlock Text="Create a New Custom Toolbar:" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                    <ListBox x:Name="ToolbarListBox" ItemsSource="{Binding AllToolbars}" Margin="0,0,10,0">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <CheckBox Content="{Binding Name}" IsChecked="{Binding IsVisible, Mode=TwoWay}" Margin="2" Cursor="Hand"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
 
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,15">
-                        <TextBox x:Name="NewToolbarNameBox" Width="200" Margin="0,0,10,0" VerticalContentAlignment="Center" />
-                        <Button Content="New..." Width="80" Padding="4,2" Click="CreateNewToolbar_Click" Cursor="Hand"/>
+                    <StackPanel Grid.Column="1">
+                        <Button Content="New..." Click="NewToolbar_Click" Margin="0,0,0,5" Padding="4"/>
+                        <Button Content="Rename..." Click="RenameToolbar_Click" Margin="0,0,0,5" Padding="4"/>
+                        <Button Content="Delete" Click="DeleteToolbar_Click" Margin="0,0,0,15" Padding="4"/>
+                        <Button Content="Reset" Click="ResetToolbar_Click" Padding="4"/>
                     </StackPanel>
-
-                    <TextBlock Grid.Row="2" TextWrapping="Wrap" Foreground="Gray" FontStyle="Italic"
-                               Text="Type a name above and click 'New...' to spawn a blank custom toolbar. You can then drag commands into it from the Commands tab!"/>
                 </Grid>
             </TabItem>
-
             <TabItem Header="Commands">
                 <Grid Margin="15">
                     <Grid.RowDefinitions>
@@ -61,5 +64,17 @@
             </TabItem>
 
         </TabControl>
+        <Grid x:Name="InputOverlay" Background="#80000000" Visibility="Collapsed" Panel.ZIndex="100">
+            <Border Background="White" Width="260" Height="130" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="15" CornerRadius="4">
+                <StackPanel>
+                    <TextBlock x:Name="InputPromptText" Text="Enter name:" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                    <TextBox x:Name="InputTextBox" Margin="0,0,0,15" Padding="2"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="OK" Width="60" Click="InputOk_Click" Margin="0,0,5,0"/>
+                        <Button Content="Cancel" Width="60" Click="InputCancel_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </Window>
