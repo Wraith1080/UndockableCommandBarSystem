@@ -73,7 +73,11 @@ namespace CommandBar.Core.Models
                 ActionCallback = this.ActionCallback,
 
                 // NEW: Preserve the display mode during cloning!
-                DisplayMode = this.DisplayMode
+                DisplayMode = this.DisplayMode,
+
+                // 🟢 NEW: Pass the SharpVectors data to the clones!
+                KeepOriginalColors = this.KeepOriginalColors,
+                RawSvgContent = this.RawSvgContent
             };
         }
     }

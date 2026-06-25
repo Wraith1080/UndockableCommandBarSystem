@@ -5,12 +5,38 @@
     
     <controls:StringToPathConverter x:Key="PathConverter" />
     <controls:RawSvgConverter x:Key="RawSvgConverter"/>
+    <Grid x:Key="DualMenuIcon" x:Shared="False" Width="16" Height="16">
+        <ContentControl Content="{Binding IconGeometry, Converter={StaticResource PathConverter}}">
+            <ContentControl.Style>
+                <Style TargetType="ContentControl">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding KeepOriginalColors}" Value="False">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ContentControl.Style>
+        </ContentControl>
+        <Image Source="{Binding RawSvgContent, Converter={StaticResource RawSvgConverter}}">
+            <Image.Style>
+                <Style TargetType="Image">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding KeepOriginalColors}" Value="True">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Image.Style>
+        </Image>
+    </Grid>
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     <Style x:Key="NativeMenuBarItemStyle" TargetType="MenuItem">
         <Setter Property="Header" Value="{Binding Text}"/>
         <Setter Property="ItemsSource" Value="{Binding ChildItems}"/>
         <Setter Property="Command" Value="{Binding ExecuteItemCommand}"/>
-        <Setter Property="Icon" Value="{Binding IconGeometry, Converter={StaticResource PathConverter}, FallbackValue={x:Null}}"/>
+        <Setter Property="Icon" Value="{StaticResource DualMenuIcon}"/>
         <Setter Property="InputGestureText" Value="{Binding ShortcutText}"/>
         <Setter Property="ToolTip" Value="{Binding Tooltip}"/>
         <Style.Triggers>
@@ -171,10 +197,9 @@
                 <MenuItem.Header>
                     <StackPanel Orientation="Horizontal">
                         <Grid x:Name="IconPath" Width="16" Height="16" Margin="0,0,4,0">
-
-                            <Path Data="{Binding IconGeometry}" Fill="#444" Stretch="Uniform">
-                                <Path.Style>
-                                    <Style TargetType="Path">
+                            <ContentControl Content="{Binding IconGeometry, Converter={StaticResource PathConverter}}">
+                                <ContentControl.Style>
+                                    <Style TargetType="ContentControl">
                                         <Setter Property="Visibility" Value="Collapsed"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding KeepOriginalColors}" Value="False">
@@ -182,9 +207,8 @@
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
-                                </Path.Style>
-                            </Path>
-
+                                </ContentControl.Style>
+                            </ContentControl>
                             <Image Source="{Binding RawSvgContent, Converter={StaticResource RawSvgConverter}}">
                                 <Image.Style>
                                     <Style TargetType="Image">
@@ -197,7 +221,6 @@
                                     </Style>
                                 </Image.Style>
                             </Image>
-
                         </Grid>
                         <AccessText x:Name="LabelText" Text="{Binding Text}" VerticalAlignment="Center"/>
 
@@ -211,7 +234,7 @@
                         <Setter Property="Command" Value="{Binding ExecuteItemCommand}"/>
                         <Setter Property="InputGestureText" Value="{Binding ShortcutText}"/>
                         <Setter Property="ToolTip" Value="{Binding Tooltip}"/>
-                        <Setter Property="Icon" Value="{Binding IconGeometry, Converter={StaticResource PathConverter}, FallbackValue={x:Null}}"/>
+                        <Setter Property="Icon" Value="{StaticResource DualMenuIcon}"/>
                     </Style>
                 </MenuItem.ItemContainerStyle>
 

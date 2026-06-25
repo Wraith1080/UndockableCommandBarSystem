@@ -354,8 +354,10 @@ namespace CommandBar.Core.Models
             if (sender is CommandItem masterCmd)
             {
                 if (e.PropertyName == nameof(CommandItem.Text) ||
-                    e.PropertyName == nameof(CommandItem.Tooltip) ||
-                    e.PropertyName == nameof(CommandItem.IconGeometry))
+                     e.PropertyName == nameof(CommandItem.Tooltip) ||
+                     e.PropertyName == nameof(CommandItem.IconGeometry) ||
+                     e.PropertyName == nameof(CommandItem.KeepOriginalColors) || // 🟢 NEW
+                     e.PropertyName == nameof(CommandItem.RawSvgContent))        // 🟢 NEW
                 {
                     // 1. Sweep every instantiated toolbar
                     foreach (var tb in AllToolbars)
@@ -386,6 +388,10 @@ namespace CommandBar.Core.Models
                     if (propertyName == nameof(CommandItem.Text)) item.Text = masterCmd.Text;
                     else if (propertyName == nameof(CommandItem.Tooltip)) item.Tooltip = masterCmd.Tooltip;
                     else if (propertyName == nameof(CommandItem.IconGeometry)) item.IconGeometry = masterCmd.IconGeometry;
+
+                    // 🟢 NEW
+                    else if (propertyName == nameof(CommandItem.KeepOriginalColors)) item.KeepOriginalColors = masterCmd.KeepOriginalColors;
+                    else if (propertyName == nameof(CommandItem.RawSvgContent)) item.RawSvgContent = masterCmd.RawSvgContent;
                 }
 
                 // If this item is a Menu or Dropdown, we must recursively check its children!
@@ -409,7 +415,7 @@ namespace CommandBar.Core.Models
         public string Text { get; set; } = string.Empty;
         public string Tooltip { get; set; } = string.Empty;
         public string IconGeometry { get; set; } = string.Empty;
-        public bool KeepOriginalColors { get; set; } = false; // NEW
+        public bool KeepOriginalColors { get; set; } 
         public string RawSvgContent { get; set; } = string.Empty; // NEW
 
     }

@@ -10,6 +10,7 @@
                 <ResourceDictionary Source="pack://application:,,,/CommandBar.UI;component/CommandBarTemplates.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
+        
     </Window.Resources>
     <Grid Margin="10">
         <TabControl>
@@ -74,8 +75,32 @@
                         <ListBox.ItemTemplate>
                             <DataTemplate DataType="{x:Type models:CommandItem}">
                                 <StackPanel Orientation="Horizontal" Margin="4">
-                                    <ContentControl Content="{Binding IconGeometry, Converter={StaticResource PathConverter}}" 
-                                                    Width="16" Height="16" Margin="0,0,10,0"/>
+                                    <Grid Width="16" Height="16" Margin="0,0,10,0">
+                                        <ContentControl Content="{Binding IconGeometry, Converter={StaticResource PathConverter}}">
+                                            <ContentControl.Style>
+                                                <Style TargetType="ContentControl">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding KeepOriginalColors}" Value="False">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </ContentControl.Style>
+                                        </ContentControl>
+                                        <Image Source="{Binding RawSvgContent, Converter={StaticResource RawSvgConverter}}">
+                                            <Image.Style>
+                                                <Style TargetType="Image">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding KeepOriginalColors}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Image.Style>
+                                        </Image>
+                                    </Grid>
                                     <TextBlock Text="{Binding Text}" VerticalAlignment="Center" FontSize="14"/>
                                 </StackPanel>
                             </DataTemplate>
@@ -135,8 +160,32 @@
                                 <TextBlock Text="Live Preview:" FontSize="11" Foreground="#555" FontWeight="SemiBold"/>
                                 
                                 <Border BorderBrush="#D4D4D4" BorderThickness="1" Background="White" Width="48" Height="48" HorizontalAlignment="Left" CornerRadius="4" Margin="0,5,0,0">
-                                    <ContentControl Content="{Binding IconGeometry, Converter={StaticResource PathConverter}}" 
-                                                    Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <Grid Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <ContentControl Content="{Binding IconGeometry, Converter={StaticResource PathConverter}}">
+                                            <ContentControl.Style>
+                                                <Style TargetType="ContentControl">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding KeepOriginalColors}" Value="False">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </ContentControl.Style>
+                                        </ContentControl>
+                                        <Image Source="{Binding RawSvgContent, Converter={StaticResource RawSvgConverter}}">
+                                            <Image.Style>
+                                                <Style TargetType="Image">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding KeepOriginalColors}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Image.Style>
+                                        </Image>
+                                    </Grid>
                                 </Border>
                                 <CheckBox IsChecked="{Binding KeepOriginalColors}" Content="Keep Original Colors" Margin="0,15,0,0"/>
                                 <Button Content="Reset Command to Default" Width="160" Height="26" Margin="0,15,0,0" 
