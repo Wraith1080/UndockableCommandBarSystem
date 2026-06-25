@@ -71,13 +71,10 @@ namespace CommandBar.Core.Models
                 Tooltip = this.Tooltip,
                 IconGeometry = this.IconGeometry,
                 ActionCallback = this.ActionCallback,
-
-                // NEW: Preserve the display mode during cloning!
                 DisplayMode = this.DisplayMode,
-
-                // 🟢 NEW: Pass the SharpVectors data to the clones!
                 KeepOriginalColors = this.KeepOriginalColors,
-                RawSvgContent = this.RawSvgContent
+                RawSvgContent = this.RawSvgContent,
+                IsVisible = this.IsVisible
             };
         }
     }

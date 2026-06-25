@@ -18,8 +18,11 @@ namespace CommandBar.Core.Models
                 IconGeometry = this.IconGeometry,
                 ActionCallback = this.ActionCallback,
                 DisplayMode = this.DisplayMode,
-                // Copy the specific Toggle property
-                IsChecked = this.IsChecked
+                KeepOriginalColors = this.KeepOriginalColors,
+                RawSvgContent = this.RawSvgContent,
+                IsVisible = this.IsVisible,
+
+                IsChecked = this.IsChecked // Crucial for toggles!
             };
         }
     }

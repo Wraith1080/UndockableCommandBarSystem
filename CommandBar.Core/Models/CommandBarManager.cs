@@ -229,13 +229,29 @@ namespace CommandBar.Core.Models
             return JsonSerializer.Serialize(layout, options);
         }
 
+        // 🟢 NEW HELPER: Sweeps the live MenuBar to capture dynamic folders before saving
+        private void SyncRegistryRecursive(System.Collections.Generic.IEnumerable<CommandItem> items)
+        {
+            foreach (var item in items)
+            {
+                if (!_masterCommandRegistry.ContainsKey(item.Id))
+                    _masterCommandRegistry[item.Id] = item;
+
+                if (item is CommandDropdownItem dropdown && dropdown.ChildItems != null)
+                    SyncRegistryRecursive(dropdown.ChildItems);
+            }
+        }
+
         // --- 🟢 NEW: COMMAND PERSISTENCE ---
         public string SaveCommandsToJson()
         {
-            var dtoList = new List<CommandDto>();
+            // 1. Ensure all custom user folders are backed up in the registry
+            if (MainMenuBar != null) SyncRegistryRecursive(MainMenuBar.DockedItems);
+
+            var dtoList = new System.Collections.Generic.List<CommandDto>();
             foreach (var cmd in _masterCommandRegistry.Values)
             {
-                dtoList.Add(new CommandDto
+                var dto = new CommandDto
                 {
                     Id = cmd.Id,
                     Text = cmd.Text,
@@ -243,28 +259,56 @@ namespace CommandBar.Core.Models
                     IconGeometry = cmd.IconGeometry,
                     KeepOriginalColors = cmd.KeepOriginalColors,
                     RawSvgContent = cmd.RawSvgContent
-                });
+                };
+
+                // 2. Map the parent-child relationships
+                if (cmd is CommandDropdownItem dropdown && dropdown.ChildItems != null)
+                {
+                    dto.ChildItemIds = System.Linq.Enumerable.ToList(System.Linq.Enumerable.Select(dropdown.ChildItems, c => c.Id));
+                }
+                dtoList.Add(dto);
             }
-            return JsonSerializer.Serialize(dtoList, new JsonSerializerOptions { WriteIndented = true });
+            return System.Text.Json.JsonSerializer.Serialize(dtoList, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         }
 
         public void LoadCommandsFromJson(string json)
         {
             if (string.IsNullOrWhiteSpace(json)) return;
 
-            var dtoList = JsonSerializer.Deserialize<List<CommandDto>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var dtoList = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.List<CommandDto>>(json, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             if (dtoList == null) return;
 
+            // PASS 1: Create missing items and apply visual properties
             foreach (var dto in dtoList)
             {
-                // If the command exists in our dictionary, overwrite its default properties with the user's custom properties!
-                if (_masterCommandRegistry.TryGetValue(dto.Id, out var existingCmd))
+                if (!_masterCommandRegistry.TryGetValue(dto.Id, out var existingCmd))
                 {
-                    existingCmd.Text = dto.Text;
-                    existingCmd.Tooltip = dto.Tooltip;
-                    existingCmd.IconGeometry = dto.IconGeometry;
-                    existingCmd.KeepOriginalColors = dto.KeepOriginalColors;
-                    existingCmd.RawSvgContent = dto.RawSvgContent;
+                    if (dto.Id.StartsWith("SEP_")) existingCmd = new CommandSeparator { Id = dto.Id };
+                    else existingCmd = new CommandDropdownItem { Id = dto.Id }; // Assume unknown dynamic items are folders
+
+                    _masterCommandRegistry[dto.Id] = existingCmd;
+                }
+
+                existingCmd.Text = dto.Text;
+                existingCmd.Tooltip = dto.Tooltip;
+                existingCmd.IconGeometry = dto.IconGeometry;
+                existingCmd.KeepOriginalColors = dto.KeepOriginalColors;
+                existingCmd.RawSvgContent = dto.RawSvgContent;
+            }
+
+            // PASS 2: Rebuild the tree structure using the Master references
+            foreach (var dto in dtoList)
+            {
+                if (dto.ChildItemIds != null && _masterCommandRegistry.TryGetValue(dto.Id, out var existingCmd) && existingCmd is CommandDropdownItem dropdown)
+                {
+                    dropdown.ChildItems.Clear();
+                    foreach (var childId in dto.ChildItemIds)
+                    {
+                        if (_masterCommandRegistry.TryGetValue(childId, out var childCmd))
+                        {
+                            dropdown.ChildItems.Add(childCmd);
+                        }
+                    }
                 }
             }
         }
@@ -417,6 +461,9 @@ namespace CommandBar.Core.Models
         public string IconGeometry { get; set; } = string.Empty;
         public bool KeepOriginalColors { get; set; } 
         public string RawSvgContent { get; set; } = string.Empty; // NEW
+
+        // 🟢 NEW: Store the tree structure!
+        public System.Collections.Generic.List<string>? ChildItemIds { get; set; }
 
     }
 

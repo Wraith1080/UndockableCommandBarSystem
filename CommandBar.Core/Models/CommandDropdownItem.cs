@@ -7,6 +7,7 @@ namespace CommandBar.Core.Models
         // We keep it read-only (no set;), but we initialize it immediately!
         public ObservableCollection<CommandItem> ChildItems { get; } = new ObservableCollection<CommandItem>();
 
+        // 🟢 NEW: Deep copy the entire menu tree during a clone!
         public override CommandItem Clone()
         {
             var clone = new CommandDropdownItem
@@ -16,10 +17,12 @@ namespace CommandBar.Core.Models
                 Tooltip = this.Tooltip,
                 IconGeometry = this.IconGeometry,
                 ActionCallback = this.ActionCallback,
-                DisplayMode = this.DisplayMode
+                DisplayMode = this.DisplayMode,
+                KeepOriginalColors = this.KeepOriginalColors,
+                RawSvgContent = this.RawSvgContent,
+                IsVisible = this.IsVisible
             };
 
-            // CRITICAL: Recursively clone every child item inside the menu!
             foreach (var child in this.ChildItems)
             {
                 clone.ChildItems.Add(child.Clone());

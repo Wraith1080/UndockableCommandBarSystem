@@ -7,7 +7,18 @@
 
         public override CommandItem Clone()
         {
-            return new CommandSeparator();
+            return new CommandSeparator
+            {
+                Id = this.Id,
+                Text = this.Text,
+                Tooltip = this.Tooltip,
+                IconGeometry = this.IconGeometry,
+                ActionCallback = this.ActionCallback,
+                DisplayMode = this.DisplayMode,
+                KeepOriginalColors = this.KeepOriginalColors,
+                RawSvgContent = this.RawSvgContent,
+                IsVisible = this.IsVisible
+            };
         }
     }
 }
