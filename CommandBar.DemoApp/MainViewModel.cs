@@ -157,8 +157,9 @@ namespace CommandBar.DemoApp
 
             // The Paste Dropdown
             var pasteDropdown = new CommandDropdownItem { Text = "Paste", Tooltip = "Paste Options", DisplayMode = CommandDisplayMode.ImageOnly, IconGeometry = iconPaste };
-            pasteDropdown.ChildItems.Add(new CommandItem { Text = "Paste as Text", IconGeometry = iconPaste, DisplayMode = CommandDisplayMode.ImageAndText });
-            pasteDropdown.ChildItems.Add(new CommandItem { Text = "Paste Special...", IconGeometry = iconPaste, DisplayMode = CommandDisplayMode.ImageAndText });
+            // 🟢 BONUS FIX: Give these dynamic children IDs so they save/load perfectly!
+            pasteDropdown.ChildItems.Add(new CommandItem { Id = "App.PasteText", Text = "Paste as Text", IconGeometry = iconPaste, DisplayMode = CommandDisplayMode.ImageAndText });
+            pasteDropdown.ChildItems.Add(new CommandItem { Id = "App.PasteSpecial", Text = "Paste Special...", IconGeometry = iconPaste, DisplayMode = CommandDisplayMode.ImageAndText });
             Manager.RegisterCommand("App.PasteMenu", pasteDropdown);
 
             // Formatting

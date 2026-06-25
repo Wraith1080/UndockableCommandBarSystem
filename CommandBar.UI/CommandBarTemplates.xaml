@@ -39,6 +39,8 @@
         <Setter Property="Icon" Value="{StaticResource DualMenuIcon}"/>
         <Setter Property="InputGestureText" Value="{Binding ShortcutText}"/>
         <Setter Property="ToolTip" Value="{Binding Tooltip}"/>
+
+        <Setter Property="ItemContainerStyle" Value="{DynamicResource NativeMenuBarItemStyle}"/>
         <Style.Triggers>
             <DataTrigger Binding="{Binding DisplayMode}" Value="TextOnly">
                 <Setter Property="Icon" Value="{x:Null}" />
