@@ -1,0 +1,25 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <SolidColorBrush x:Key="CmdBar.Background" Color="#F5F5F5"/>
+    <SolidColorBrush x:Key="CmdBar.Border" Color="#D4D4D4"/>
+    <SolidColorBrush x:Key="CmdBar.Grip" Color="#A0A0A0"/>
+
+    <SolidColorBrush x:Key="CmdBar.Foreground" Color="#333333"/>
+    <SolidColorBrush x:Key="CmdBar.IconFill" Color="#444444"/>
+    <SolidColorBrush x:Key="CmdBar.DisabledForeground" Color="#999999"/>
+
+    <SolidColorBrush x:Key="CmdBar.Button.Hover.Background" Color="#E5F3FF"/>
+    <SolidColorBrush x:Key="CmdBar.Button.Hover.Border" Color="#CCE8FF"/>
+
+    <SolidColorBrush x:Key="CmdBar.Button.Pressed.Background" Color="#CCE4F7"/>
+    <SolidColorBrush x:Key="CmdBar.Button.Pressed.Border" Color="#005499"/>
+
+    <SolidColorBrush x:Key="CmdBar.Button.Checked.Background" Color="#CCE8FF"/>
+    <SolidColorBrush x:Key="CmdBar.Button.Checked.Border" Color="#99D1FF"/>
+
+    <SolidColorBrush x:Key="CmdBar.Menu.Background" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="CmdBar.Menu.Border" Color="#CCCCCC"/>
+    <SolidColorBrush x:Key="CmdBar.Menu.Separator" Color="#E0E0E0"/>
+
+</ResourceDictionary>

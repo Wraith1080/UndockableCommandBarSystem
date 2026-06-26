@@ -65,7 +65,7 @@
             <StackPanel Orientation="Horizontal">
                 <Grid x:Name="IconPath" Width="16" Height="16" Margin="0,0,4,0">
 
-                    <Path Data="{Binding IconGeometry}" Fill="#444" Stretch="Uniform">
+                    <Path Data="{Binding IconGeometry}" Fill="{DynamicResource CmdBar.IconFill}" Stretch="Uniform">
                         <Path.Style>
                             <Style TargetType="Path">
                                 <Setter Property="Visibility" Value="Collapsed"/>
@@ -129,7 +129,7 @@
             <StackPanel Orientation="Horizontal">
                 <Grid x:Name="IconPath" Width="16" Height="16" Margin="0,0,4,0">
 
-                    <Path Data="{Binding IconGeometry}" Fill="#444" Stretch="Uniform">
+                    <Path Data="{Binding IconGeometry}" Fill="{DynamicResource CmdBar.IconFill}" Stretch="Uniform">
                         <Path.Style>
                             <Style TargetType="Path">
                                 <Setter Property="Visibility" Value="Collapsed"/>
@@ -227,7 +227,7 @@
                         </Grid>
                         <AccessText x:Name="LabelText" Text="{Binding Text}" VerticalAlignment="Center"/>
 
-                        <Path x:Name="DropdownArrow" Data="M 0,0 L 4,4 L 8,0 Z" Fill="#444" VerticalAlignment="Center" Margin="4,2,0,0"/>
+                        <Path x:Name="DropdownArrow" Data="M 0,0 L 4,4 L 8,0 Z" Fill="{DynamicResource CmdBar.IconFill}" VerticalAlignment="Center" Margin="4,2,0,0"/>
                     </StackPanel>
                 </MenuItem.Header>
 

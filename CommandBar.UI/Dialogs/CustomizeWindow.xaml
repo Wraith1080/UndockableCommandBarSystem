@@ -224,6 +224,12 @@
                                         <TextBlock Text="----------- (Separator) -----------" Foreground="Gray" FontStyle="Italic"/>
                                     </StackPanel>
                                 </DataTemplate>
+                                <DataTemplate DataType="{x:Type models:CommandToggleItem}">
+                                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                                        <TextBlock Text="☑️" Margin="0,0,5,0" Foreground="Gray"/>
+                                        <TextBlock Text="{Binding Text}"/>
+                                    </StackPanel>
+                                </DataTemplate>
                             </TreeView.Resources>
                         </TreeView>
                     </Border>

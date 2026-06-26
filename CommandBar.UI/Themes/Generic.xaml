@@ -27,9 +27,8 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type controls:UndockableToolBar}">
-                    <Border Background="Transparent" BorderThickness="0" CornerRadius="2" Margin="2" Padding="2">
+                    <Border Background="{DynamicResource CmdBar.Background}" BorderBrush="{DynamicResource CmdBar.Border}" BorderThickness="0,0,0,1">
                         <DockPanel LastChildFill="True">
-
                             <Thumb x:Name="ToolBarThumb" DockPanel.Dock="Left" Width="10" Margin="0,2,6,2" Cursor="SizeAll" ToolTip="Drag to undock">
                                 <Thumb.Template>
                                     <ControlTemplate TargetType="Thumb">

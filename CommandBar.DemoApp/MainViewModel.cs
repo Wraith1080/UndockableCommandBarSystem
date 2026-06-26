@@ -63,7 +63,7 @@ namespace CommandBar.DemoApp
             // 🟢 THE FIX: Teach the application how to instantly recreate a floating window on launch!
             Manager.RestoreFloatingWindowAction = (toolbarModel) =>
             {
-                var floatingWindow = new CommandBar.UI.Controls.FloatingToolBarWindow();
+                var floatingWindow = new CommandBar.UI.Controls.FloatingToolBarWindow(toolbarModel);
                 var floatingBar = new CommandBar.UI.Controls.UndockableToolBar();
 
                 floatingBar.DataContext = toolbarModel;

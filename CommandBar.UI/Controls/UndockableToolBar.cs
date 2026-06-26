@@ -172,7 +172,10 @@ namespace CommandBar.UI.Controls
 
         private void InitiateTearOff()
         {
-            var floatingWindow = new FloatingToolBarWindow();
+            if (!(this.DataContext is Core.Models.ToolbarModel model)) return;
+
+            // 🟢 FIX: Pass the model directly into the new constructor
+            var floatingWindow = new FloatingToolBarWindow(model);
 
             // NEW: Give the floating window a reference to this original toolbar
             floatingWindow.OriginalToolBar = this;
@@ -214,10 +217,7 @@ namespace CommandBar.UI.Controls
 
             floatingWindow.Content = floatingBar;
 
-            if (this.DataContext is ToolbarModel model)
-            {
-                model.RequestDockChange(DockLocation.Floating);
-            }
+            model.RequestDockChange(DockLocation.Floating);
 
             // 2. Get the exact screen coordinates of the cursor
             GetCursorPos(out POINT p); // (Requires the Win32 GetCursorPos import you used in FloatingToolBarWindow)
@@ -545,17 +545,48 @@ namespace CommandBar.UI.Controls
             }
         }
         // NEW: Calculates which zone the mouse is currently hovering over
-        private DockLocation CalculateDockZone(Point mousePos, FrameworkElement dockContainer)
+        private Core.Models.DockLocation CalculateDockZone(Point mousePos, FrameworkElement window)
         {
-            // USE THE PROPERTY instead of the magic number
-            double edgeThickness = EdgeSnapThreshold;
+            // 🟢 FIX 1: If the mouse is dragged completely OUTSIDE the main window, it stays floating!
+            if (mousePos.X < 0 || mousePos.Y < 0 || mousePos.X > window.ActualWidth || mousePos.Y > window.ActualHeight)
+            {
+                return Core.Models.DockLocation.Floating;
+            }
 
-            if (mousePos.Y < edgeThickness) return DockLocation.Top;
-            if (mousePos.Y > dockContainer.ActualHeight - edgeThickness) return DockLocation.Bottom;
-            if (mousePos.X < edgeThickness) return DockLocation.Left;
-            if (mousePos.X > dockContainer.ActualWidth - edgeThickness) return DockLocation.Right;
+            // 🟢 FIX 2: Try the Visual Hit Test. This allows you to easily drop onto POPULATED trays anywhere they are.
+            var hitResult = System.Windows.Media.VisualTreeHelper.HitTest(window, mousePos);
+            if (hitResult != null)
+            {
+                DependencyObject current = hitResult.VisualHit;
+                while (current != null)
+                {
+                    if (current is System.Windows.Controls.ToolBarTray tray)
+                    {
+                        var dock = System.Windows.Controls.DockPanel.GetDock(tray);
+                        return dock switch
+                        {
+                            System.Windows.Controls.Dock.Top => Core.Models.DockLocation.Top,
+                            System.Windows.Controls.Dock.Bottom => Core.Models.DockLocation.Bottom,
+                            System.Windows.Controls.Dock.Left => Core.Models.DockLocation.Left,
+                            System.Windows.Controls.Dock.Right => Core.Models.DockLocation.Right,
+                            _ => Core.Models.DockLocation.Floating
+                        };
+                    }
+                    current = System.Windows.Media.VisualTreeHelper.GetParent(current);
+                }
+            }
 
-            return DockLocation.Floating;
+            // 🟢 FIX 3: If we didn't hit a tray (because it's empty and collapsed to 0px), 
+            // check if the mouse is hovering tightly against the edge of the window.
+            double edgeThreshold = 30.0; // The "magnetic" snap distance
+
+            if (mousePos.Y <= edgeThreshold) return Core.Models.DockLocation.Top;
+            if (mousePos.Y >= window.ActualHeight - edgeThreshold) return Core.Models.DockLocation.Bottom;
+            if (mousePos.X <= edgeThreshold) return Core.Models.DockLocation.Left;
+            if (mousePos.X >= window.ActualWidth - edgeThreshold) return Core.Models.DockLocation.Right;
+
+            // Otherwise, it stays floating!
+            return Core.Models.DockLocation.Floating;
         }
 
         private void OnMenuItemClick(object sender, System.Windows.RoutedEventArgs e)

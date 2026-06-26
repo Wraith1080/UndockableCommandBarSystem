@@ -34,11 +34,29 @@ namespace CommandBar.UI.Controls
                 new FrameworkPropertyMetadata(typeof(FloatingToolBarWindow)));
         }
 
-        public FloatingToolBarWindow()
+        public FloatingToolBarWindow(CommandBar.Core.Models.ToolbarModel model)
         {
             ShowInTaskbar = false;
             ShowActivated = false;
             Focusable = false;
+            // 🟢 FIX BUG 2: Prevent tiny floating windows and spawn them safely!
+            this.MinWidth = 120;
+            this.MinHeight = 40;
+            this.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            if (Application.Current.MainWindow != null)
+            {
+                this.Owner = Application.Current.MainWindow; // Keeps it above the main app!
+            }
+
+            // 🟢 FIX BUG 3: Listen to the Customize Dialog to close empty shells!
+            model.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(CommandBar.Core.Models.ToolbarModel.IsVisible))
+                {
+                    if (model.IsVisible) this.Show();
+                    else this.Hide();
+                }
+            };
         }
 
         protected override void OnSourceInitialized(EventArgs e)
