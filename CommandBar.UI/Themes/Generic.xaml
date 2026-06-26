@@ -34,7 +34,7 @@
                                     <ControlTemplate TargetType="Thumb">
                                         <Border Background="Transparent">
                                             <Path x:Name="GripPath" Data="M 2,2 A 1,1 0 1,1 2,2.01 M 2,6 A 1,1 0 1,1 2,6.01 M 2,10 A 1,1 0 1,1 2,10.01 M 6,2 A 1,1 0 1,1 6,2.01 M 6,6 A 1,1 0 1,1 6,6.01 M 6,10 A 1,1 0 1,1 6,10.01" 
-                                  Stroke="#999" StrokeThickness="2" StrokeDashArray="0,0" Fill="#999" Stretch="None" VerticalAlignment="Center" HorizontalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+                                  Stroke="{DynamicResource CmdBar.Grip}" StrokeThickness="2" Fill="{DynamicResource CmdBar.Grip}" Stretch="None" VerticalAlignment="Center" HorizontalAlignment="Center" RenderTransformOrigin="0.5,0.5">
                                                 <Path.RenderTransform>
                                                     <RotateTransform Angle="0" />
                                                 </Path.RenderTransform>
@@ -56,13 +56,13 @@
                             <ToggleButton x:Name="PART_OverflowButton" DockPanel.Dock="Right" 
                           IsChecked="{Binding IsOverflowOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
                           Padding="2" Background="Transparent" BorderThickness="0" Cursor="Hand">
-                                <Path x:Name="OverflowArrow" Data="M 0,0 L 4,4 L 8,0" Stroke="#777" StrokeThickness="2" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="2,0"/>
+                                <Path x:Name="OverflowArrow" Data="M 0,0 L 4,4 L 8,0" Stroke="{DynamicResource CmdBar.Foreground}" StrokeThickness="2" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="2,0"/>
                             </ToggleButton>
 
                             <Popup x:Name="PART_OverflowPopup" AllowsTransparency="True" Placement="Bottom" 
                    PlacementTarget="{Binding ElementName=PART_OverflowButton}"
                    IsOpen="{Binding IsOverflowOpen, RelativeSource={RelativeSource TemplatedParent}}" StaysOpen="False" Focusable="False">
-                                <Border Background="#FAFAFA" BorderBrush="#D4D4D4" BorderThickness="1" Padding="2" Margin="0,2,0,0">
+                                <Border Background="{DynamicResource CmdBar.Menu.Background}" BorderBrush="{DynamicResource CmdBar.Menu.Border}" BorderThickness="1" Padding="2" Margin="0,2,0,0">
                                     <StackPanel>
 
                                         <ToolBarOverflowPanel x:Name="PART_ToolBarOverflowPanel" KeyboardNavigation.TabNavigation="Cycle" KeyboardNavigation.DirectionalNavigation="Cycle" />
@@ -132,8 +132,8 @@
         <Setter Property="AllowsTransparency" Value="True" />
         <Setter Property="SizeToContent" Value="WidthAndHeight" />
 
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" />
+        <Setter Property="Background" Value="{DynamicResource CmdBar.Background}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CmdBar.Border}" />
         <Setter Property="BorderThickness" Value="1" />
 
         <Setter Property="Template">
@@ -152,8 +152,4 @@
         </Setter>
     </Style>
     <!-- 1. Define the Merged Dictionaries block -->
-    <ResourceDictionary.MergedDictionaries>
-        <!-- 2. Reference your specific control styles using Pack URIs -->
-        <ResourceDictionary Source="pack://application:,,,/CommandBar.UI;component/CommandBarTemplates.xaml" />
-    </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>
