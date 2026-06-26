@@ -176,7 +176,7 @@ namespace CommandBar.DemoApp
             var fileMenu = new CommandDropdownItem { Text = "File", DisplayMode = CommandDisplayMode.TextOnly };
             AddClonedCommandToMenu(fileMenu, "App.New");
             AddClonedCommandToMenu(fileMenu, "App.Open");
-            fileMenu.ChildItems.Add(new CommandSeparator());
+            fileMenu.ChildItems.Add(new CommandSeparator { Id = "SEP_File_1" });
             AddClonedCommandToMenu(fileMenu, "App.Save");
             AddClonedCommandToMenu(fileMenu, "App.SaveAs");
             Manager.RegisterCommand("Menu.File", fileMenu);
@@ -185,7 +185,7 @@ namespace CommandBar.DemoApp
             var editMenu = new CommandDropdownItem { Text = "Edit", DisplayMode = CommandDisplayMode.TextOnly };
             AddClonedCommandToMenu(editMenu, "App.Undo");
             AddClonedCommandToMenu(editMenu, "App.Redo");
-            editMenu.ChildItems.Add(new CommandSeparator());
+            editMenu.ChildItems.Add(new CommandSeparator { Id = "SEP_Edit_1" });
             AddClonedCommandToMenu(editMenu, "App.Cut");
             AddClonedCommandToMenu(editMenu, "App.Copy");
             AddClonedCommandToMenu(editMenu, "App.PasteMenu"); // Injecting a dropdown into a dropdown!

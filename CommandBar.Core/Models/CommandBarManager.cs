@@ -230,15 +230,36 @@ namespace CommandBar.Core.Models
         }
 
         // 🟢 NEW HELPER: Sweeps the live MenuBar to capture dynamic folders before saving
+        // 🟢 UPDATED: Syncs live UI folders back to the Master Registry before saving!
         private void SyncRegistryRecursive(System.Collections.Generic.IEnumerable<CommandItem> items)
         {
             foreach (var item in items)
             {
+                // 1. Add completely new user-created items to the registry
                 if (!_masterCommandRegistry.ContainsKey(item.Id))
+                {
                     _masterCommandRegistry[item.Id] = item;
+                }
 
-                if (item is CommandDropdownItem dropdown && dropdown.ChildItems != null)
-                    SyncRegistryRecursive(dropdown.ChildItems);
+                // 2. If it's a folder, copy the live children back to the Master object!
+                if (item is CommandDropdownItem liveDropdown && liveDropdown.ChildItems != null)
+                {
+                    if (_masterCommandRegistry.TryGetValue(liveDropdown.Id, out var masterCmd) && masterCmd is CommandDropdownItem masterDropdown)
+                    {
+                        // Ensure we don't clear it if the live item IS the master item
+                        if (!ReferenceEquals(masterDropdown, liveDropdown))
+                        {
+                            masterDropdown.ChildItems.Clear();
+                            foreach (var child in liveDropdown.ChildItems)
+                            {
+                                masterDropdown.ChildItems.Add(child);
+                            }
+                        }
+                    }
+
+                    // Keep digging down the tree
+                    SyncRegistryRecursive(liveDropdown.ChildItems);
+                }
             }
         }
 
@@ -253,6 +274,7 @@ namespace CommandBar.Core.Models
             {
                 var dto = new CommandDto
                 {
+                    ItemType = cmd.GetType().Name,
                     Id = cmd.Id,
                     Text = cmd.Text,
                     Tooltip = cmd.Tooltip,
@@ -283,8 +305,14 @@ namespace CommandBar.Core.Models
             {
                 if (!_masterCommandRegistry.TryGetValue(dto.Id, out var existingCmd))
                 {
-                    if (dto.Id.StartsWith("SEP_")) existingCmd = new CommandSeparator { Id = dto.Id };
-                    else existingCmd = new CommandDropdownItem { Id = dto.Id }; // Assume unknown dynamic items are folders
+                    // 🟢 FIX: Read the JSON tag and spawn the exact C# class!
+                    existingCmd = dto.ItemType switch
+                    {
+                        "CommandSeparator" => new CommandSeparator { Id = dto.Id },
+                        "CommandDropdownItem" => new CommandDropdownItem { Id = dto.Id },
+                        "CommandToggleItem" => new CommandToggleItem { Id = dto.Id },
+                        _ => new CommandItem { Id = dto.Id }
+                    };
 
                     _masterCommandRegistry[dto.Id] = existingCmd;
                 }
@@ -455,6 +483,9 @@ namespace CommandBar.Core.Models
 
     public class CommandDto
     {
+
+        // 🟢 NEW: Remembers if this is a Separator, Dropdown, Toggle, or normal Item!
+        public string ItemType { get; set; } = "CommandItem";
         public string Id { get; set; } = string.Empty;
         public string Text { get; set; } = string.Empty;
         public string Tooltip { get; set; } = string.Empty;
