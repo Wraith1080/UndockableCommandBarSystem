@@ -16,8 +16,13 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="2">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="4,2"/>
+                    <Border Background="{TemplateBinding Background}" 
+        BorderBrush="{TemplateBinding BorderBrush}" 
+        BorderThickness="{TemplateBinding BorderThickness}" 
+        CornerRadius="{DynamicResource CmdBar.Button.CornerRadius}">
+                        <ContentPresenter HorizontalAlignment="Center" 
+                      VerticalAlignment="Center" 
+                      Margin="{DynamicResource CmdBar.Button.Padding}"/>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
@@ -43,8 +48,13 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
-                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="2">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="4,2"/>
+                    <Border Background="{TemplateBinding Background}" 
+        BorderBrush="{TemplateBinding BorderBrush}" 
+        BorderThickness="{TemplateBinding BorderThickness}" 
+        CornerRadius="{DynamicResource CmdBar.Button.CornerRadius}">
+                        <ContentPresenter HorizontalAlignment="Center" 
+                      VerticalAlignment="Center" 
+                      Margin="{DynamicResource CmdBar.Button.Padding}"/>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
@@ -89,26 +99,124 @@
     </Grid>
 
     <Style x:Key="NativeMenuBarItemStyle" TargetType="MenuItem">
-        <Style.Resources>
-            <SolidColorBrush x:Key="{x:Static SystemColors.MenuBrushKey}" Color="Transparent"/>
-            <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="Transparent"/>
-        </Style.Resources>
-
         <Setter Property="Header" Value="{Binding Text}"/>
         <Setter Property="ItemsSource" Value="{Binding ChildItems}"/>
         <Setter Property="Command" Value="{Binding ExecuteItemCommand}"/>
         <Setter Property="Icon" Value="{StaticResource DualMenuIcon}"/>
         <Setter Property="InputGestureText" Value="{Binding ShortcutText}"/>
         <Setter Property="ToolTip" Value="{Binding Tooltip}"/>
-
         <Setter Property="ItemContainerStyle" Value="{Binding ItemContainerStyle, RelativeSource={RelativeSource AncestorType=ItemsControl}}"/>
 
         <Style.Triggers>
+            <Trigger Property="Role" Value="TopLevelHeader">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="MenuItem">
+                            <Border x:Name="RootBorder" Background="Transparent" CornerRadius="{DynamicResource CmdBar.Button.CornerRadius}">
+                                <Grid>
+                                    <ContentPresenter x:Name="HeaderHost" ContentSource="Header" Margin="{DynamicResource CmdBar.Button.Padding}" RecognizesAccessKey="True"/>
+                                    <Popup x:Name="PART_Popup" AllowsTransparency="True" Placement="Bottom" VerticalOffset="{DynamicResource CmdBar.Menu.PopupOffset}" IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}" Focusable="False">
+                                        <Border Background="{DynamicResource CmdBar.Background}" BorderBrush="{DynamicResource CmdBar.Border}" BorderThickness="1" CornerRadius="{DynamicResource CmdBar.Menu.CornerRadius}" Padding="2" Margin="{DynamicResource CmdBar.Menu.ShadowMargin}" Effect="{DynamicResource CmdBar.Menu.Shadow}">
+                                            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="500" BorderThickness="0">
+                                                <ItemsPresenter />
+                                            </ScrollViewer>
+                                        </Border>
+                                    </Popup>
+                                </Grid>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsHighlighted" Value="True">
+                                    <Setter TargetName="RootBorder" Property="Background" Value="{DynamicResource CmdBar.Button.Hover.Background}"/>
+                                </Trigger>
+                                <Trigger Property="IsSubmenuOpen" Value="True">
+                                    <Setter TargetName="RootBorder" Property="Background" Value="{DynamicResource CmdBar.Button.Checked.Background}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+
+            <Trigger Property="Role" Value="SubmenuItem">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="MenuItem">
+                            <Border x:Name="ItemBorder" Background="Transparent" CornerRadius="{DynamicResource CmdBar.Button.CornerRadius}" Margin="2,1">
+                                <Grid Margin="4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="24" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="14" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <ContentPresenter ContentSource="Icon" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                    <ContentPresenter Grid.Column="1" ContentSource="Header" VerticalAlignment="Center" RecognizesAccessKey="True"/>
+                                    <TextBlock Grid.Column="2" Text="{TemplateBinding InputGestureText}" Margin="16,0,0,0" Opacity="0.6" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsHighlighted" Value="True">
+                                    <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource CmdBar.Button.Hover.Background}"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.5"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+
+            <Trigger Property="Role" Value="SubmenuHeader">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="MenuItem">
+                            <Border x:Name="ItemBorder" Background="Transparent" CornerRadius="{DynamicResource CmdBar.Button.CornerRadius}" Margin="2,1">
+                                <Grid Margin="4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="24" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="14" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <ContentPresenter ContentSource="Icon" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                    <ContentPresenter Grid.Column="1" ContentSource="Header" VerticalAlignment="Center" RecognizesAccessKey="True"/>
+                                    <TextBlock Grid.Column="2" Text="{TemplateBinding InputGestureText}" Margin="16,0,0,0" Opacity="0.6" VerticalAlignment="Center"/>
+
+                                    <Path x:Name="SubmenuArrow" Grid.Column="3" Data="M 0,0 L 4,4 L 0,8 Z" Fill="{DynamicResource CmdBar.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="4,0,0,0"/>
+
+                                    <Popup x:Name="PART_Popup" AllowsTransparency="True" Placement="Right" VerticalOffset="-4" HorizontalOffset="{DynamicResource CmdBar.Menu.PopupOffset}" IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}" Focusable="False">
+                                        <Border Background="{DynamicResource CmdBar.Background}" BorderBrush="{DynamicResource CmdBar.Border}" BorderThickness="1" CornerRadius="{DynamicResource CmdBar.Menu.CornerRadius}" Padding="2" Margin="{DynamicResource CmdBar.Menu.ShadowMargin}" Effect="{DynamicResource CmdBar.Menu.Shadow}">
+                                            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="500" BorderThickness="0">
+                                                <ItemsPresenter />
+                                            </ScrollViewer>
+                                        </Border>
+                                    </Popup>
+                                </Grid>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsHighlighted" Value="True">
+                                    <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource CmdBar.Button.Hover.Background}"/>
+                                </Trigger>
+                                <Trigger Property="IsSubmenuOpen" Value="True">
+                                    <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource CmdBar.Button.Hover.Background}"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.5"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+
             <DataTrigger Binding="{Binding IsSeparator}" Value="True">
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="MenuItem">
-                            <Separator Style="{StaticResource {x:Static MenuItem.SeparatorStyleKey}}"/>
+                            <Rectangle Height="1" Fill="{DynamicResource CmdBar.Border}" Margin="32,2,2,2"/>
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
@@ -123,7 +231,7 @@
     <DataTemplate DataType="{x:Type models:CommandItem}">
         <Button x:Name="RootButton" Style="{StaticResource CommandButtonStyle}" Command="{Binding ExecuteItemCommand}" Focusable="False" ToolTip="{Binding Tooltip}" Visibility="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <StackPanel Orientation="Horizontal">
-                <Grid x:Name="IconPath" Width="16" Height="16" Margin="0,0,4,0">
+                <Grid x:Name="IconPath" Width="14" Height="14" Margin="0,0,4,0">
 
                     <Path Data="{Binding IconGeometry}" Fill="{DynamicResource CmdBar.IconFill}" Stretch="Uniform">
                         <Path.Style>
@@ -186,7 +294,7 @@
     <DataTemplate DataType="{x:Type models:CommandToggleItem}">
         <ToggleButton x:Name="RootButton" Style="{StaticResource CommandToggleButtonStyle}" IsChecked="{Binding IsChecked, Mode=TwoWay}" Command="{Binding ExecuteItemCommand}" Focusable="False" ToolTip="{Binding Tooltip}" Visibility="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <StackPanel Orientation="Horizontal">
-                <Grid x:Name="IconPath" Width="16" Height="16" Margin="0,0,4,0">
+                <Grid x:Name="IconPath" Width="14" Height="14" Margin="0,0,4,0">
 
                     <Path Data="{Binding IconGeometry}" Fill="{DynamicResource CmdBar.IconFill}" Stretch="Uniform">
                         <Path.Style>
@@ -253,12 +361,69 @@
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type models:CommandDropdownItem}">
-        <Menu x:Name="RootMenu" Background="Transparent" Margin="1" Visibility="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
-            <MenuItem Focusable="False" Padding="4,2" ItemsSource="{Binding ChildItems}">
+        <Menu x:Name="RootMenu" Background="Transparent" Margin="{DynamicResource CmdBar.Menu.Margin}" Visibility="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+
+            <MenuItem Focusable="False" Padding="{DynamicResource CmdBar.Button.Padding}" ItemsSource="{Binding ChildItems}">
+
+                <MenuItem.Template>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Border x:Name="RootBorder" 
+                            Background="Transparent" 
+                            BorderBrush="Transparent" 
+                            BorderThickness="1" 
+                            CornerRadius="{DynamicResource CmdBar.Button.CornerRadius}">
+                            <Grid>
+                                <ContentPresenter ContentSource="Header" Margin="{TemplateBinding Padding}" RecognizesAccessKey="True"/>
+
+                                <Popup x:Name="PART_Popup" AllowsTransparency="True" Placement="Bottom" 
+       VerticalOffset="{DynamicResource CmdBar.Menu.PopupOffset}" 
+       IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}" Focusable="False">
+
+                                    <Border Background="{DynamicResource CmdBar.Background}" 
+            BorderBrush="{DynamicResource CmdBar.Border}" 
+            BorderThickness="1" 
+            CornerRadius="{DynamicResource CmdBar.Menu.CornerRadius}" 
+            Padding="2" Margin="{DynamicResource CmdBar.Menu.ShadowMargin}"
+            Effect="{DynamicResource CmdBar.Menu.Shadow}">
+
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="500" BorderThickness="0">
+                                            <ItemsPresenter />
+                                        </ScrollViewer>
+
+                                    </Border>
+                                </Popup>
+                            </Grid>
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="Role" Value="TopLevelHeader">
+                                <Setter Property="Padding" Value="{DynamicResource CmdBar.Button.Padding}"/>
+                            </Trigger>
+
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="Role" Value="TopLevelHeader" />
+                                    <Condition Property="IsHighlighted" Value="True" />
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="RootBorder" Property="Background" Value="{DynamicResource CmdBar.Button.Hover.Background}"/>
+                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{DynamicResource CmdBar.Button.Hover.Border}"/>
+                            </MultiTrigger>
+
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="RootBorder" Property="Background" Value="{DynamicResource CmdBar.Button.Hover.Background}"/>
+                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{DynamicResource CmdBar.Button.Hover.Border}"/>
+                            </Trigger>
+                            <Trigger Property="IsSubmenuOpen" Value="True">
+                                <Setter TargetName="RootBorder" Property="Background" Value="{DynamicResource CmdBar.Button.Checked.Background}"/>
+                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{DynamicResource CmdBar.Button.Checked.Border}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </MenuItem.Template>
 
                 <MenuItem.Header>
                     <StackPanel Orientation="Horizontal">
-                        <Grid x:Name="IconPath" Width="16" Height="16" Margin="0,0,4,0">
+                        <Grid x:Name="IconPath" Width="14" Height="14" Margin="0,0,4,0">
                             <ContentControl Content="{Binding IconGeometry, Converter={StaticResource PathConverter}}">
                                 <ContentControl.Style>
                                     <Style TargetType="ContentControl">
@@ -286,7 +451,10 @@
                         </Grid>
                         <AccessText x:Name="LabelText" Text="{Binding Text}" VerticalAlignment="Center"/>
 
-                        <Path x:Name="DropdownArrow" Data="M 0,0 L 4,4 L 8,0 Z" Fill="{DynamicResource CmdBar.IconFill}" VerticalAlignment="Center" Margin="4,2,0,0"/>
+                        <Path x:Name="DropdownArrow" 
+                          Data="{DynamicResource CmdBar.Menu.DropdownArrow}" 
+                          Fill="{DynamicResource CmdBar.Foreground}" 
+                          VerticalAlignment="Center" Margin="4,2,0,0"/>
                     </StackPanel>
                 </MenuItem.Header>
 
@@ -297,11 +465,41 @@
                         <Setter Property="InputGestureText" Value="{Binding ShortcutText}"/>
                         <Setter Property="ToolTip" Value="{Binding Tooltip}"/>
                         <Setter Property="Icon" Value="{StaticResource DualMenuIcon}"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="MenuItem">
+                                    <Border x:Name="ItemBorder" Background="Transparent" 
+                                        CornerRadius="{DynamicResource CmdBar.Button.CornerRadius}" 
+                                        Margin="2,1">
+                                        <Grid Margin="4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="24" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <ContentPresenter ContentSource="Icon" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                            <ContentPresenter Grid.Column="1" ContentSource="Header" VerticalAlignment="Center" RecognizesAccessKey="True"/>
+                                            <TextBlock Grid.Column="2" Text="{TemplateBinding InputGestureText}" Margin="16,0,0,0" Opacity="0.6" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsHighlighted" Value="True">
+                                            <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource CmdBar.Button.Hover.Background}"/>
+                                        </Trigger>
+                                        <Trigger Property="IsEnabled" Value="False">
+                                            <Setter Property="Opacity" Value="0.5"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
                     </Style>
                 </MenuItem.ItemContainerStyle>
 
             </MenuItem>
         </Menu>
+
         <DataTemplate.Triggers>
             <DataTrigger Binding="{Binding DisplayMode}" Value="ImageOnly">
                 <Setter TargetName="LabelText" Property="Visibility" Value="Collapsed" />

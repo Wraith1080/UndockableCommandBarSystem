@@ -27,7 +27,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type controls:UndockableToolBar}">
-                    <Border Background="{DynamicResource CmdBar.Background}" BorderBrush="{DynamicResource CmdBar.Border}" BorderThickness="0,0,0,1">
+                    <Border x:Name="RootBorder" Background="{DynamicResource CmdBar.Background}" BorderBrush="{DynamicResource CmdBar.Border}" BorderThickness="{DynamicResource CmdBar.ToolBar.BorderThickness}" CornerRadius="{DynamicResource CmdBar.ToolBar.CornerRadius}" Margin="{DynamicResource CmdBar.ToolBar.Margin}" Padding="{DynamicResource CmdBar.ToolBar.Padding}">
                         <DockPanel LastChildFill="True">
                             <Thumb x:Name="ToolBarThumb" DockPanel.Dock="Left" Width="10" Margin="0,2,6,2" Cursor="SizeAll" ToolTip="Drag to undock">
                                 <Thumb.Template>
@@ -54,9 +54,40 @@
                             </Thumb>
 
                             <ToggleButton x:Name="PART_OverflowButton" DockPanel.Dock="Right" 
-                          IsChecked="{Binding IsOverflowOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
-                          Padding="2" Background="Transparent" BorderThickness="0" Cursor="Hand">
-                                <Path x:Name="OverflowArrow" Data="M 0,0 L 4,4 L 8,0" Stroke="{DynamicResource CmdBar.Foreground}" StrokeThickness="2" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="2,0"/>
+              IsChecked="{Binding IsOverflowOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+              Padding="4,2" Margin="2,0" Cursor="Hand" 
+              Background="Transparent" 
+              BorderBrush="Transparent" 
+              BorderThickness="1">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="RootBorder" 
+                    Background="{TemplateBinding Background}" 
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="{DynamicResource CmdBar.Button.CornerRadius}">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                                        </Border>
+
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="RootBorder" Property="Background" Value="{DynamicResource CmdBar.Button.Hover.Background}"/>
+                                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{DynamicResource CmdBar.Button.Hover.Border}"/>
+                                            </Trigger>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="RootBorder" Property="Background" Value="{DynamicResource CmdBar.Button.Checked.Background}"/>
+                                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{DynamicResource CmdBar.Button.Checked.Border}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+
+                                <Path x:Name="OverflowArrow" 
+          Data="{DynamicResource CmdBar.ToolBar.OverflowIcon.Horizontal}" 
+          Stroke="{DynamicResource CmdBar.Foreground}" 
+          StrokeThickness="2" 
+          VerticalAlignment="Center" 
+          HorizontalAlignment="Center"/>
                             </ToggleButton>
 
                             <Popup x:Name="PART_OverflowPopup" AllowsTransparency="True" Placement="Bottom" 
@@ -108,6 +139,14 @@
 
                         <DataTrigger Binding="{Binding IsMenuBar, RelativeSource={RelativeSource Self}}" Value="True">
                             <Setter TargetName="PART_OverflowButton" Property="Visibility" Value="Collapsed" />
+                            <Setter TargetName="RootBorder" Property="BorderThickness" Value="0" />
+                            <Setter TargetName="RootBorder" Property="Margin" Value="0" />
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type ToolBarTray}}}" Value="{x:Null}">
+                            <Setter TargetName="RootBorder" Property="BorderThickness" Value="0" />
+                            <Setter TargetName="RootBorder" Property="Margin" Value="0" />
+                            <Setter TargetName="RootBorder" Property="CornerRadius" Value="0" />
                         </DataTrigger>
 
                         <Trigger Property="Orientation" Value="Vertical">
@@ -120,7 +159,7 @@
                             <Setter TargetName="PART_ToolBarPanel" Property="Margin" Value="0,0,0,4" />
                             <Setter TargetName="PART_OverflowPopup" Property="Placement" Value="Right" />
 
-                            <Setter TargetName="OverflowArrow" Property="Data" Value="M 0,0 L 4,4 L 0,8" />
+                            <Setter TargetName="OverflowArrow" Property="Data" Value="{DynamicResource CmdBar.ToolBar.OverflowIcon.Vertical}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -140,9 +179,9 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type controls:FloatingToolBarWindow}">
                     <Border Background="{TemplateBinding Background}" 
-                            BorderBrush="{TemplateBinding BorderBrush}" 
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="2">
+        BorderBrush="{TemplateBinding BorderBrush}" 
+        BorderThickness="{TemplateBinding BorderThickness}"
+        CornerRadius="{DynamicResource CmdBar.Window.CornerRadius}">
                         <AdornerDecorator>
                             <ContentPresenter Margin="2"/>
                         </AdornerDecorator>
