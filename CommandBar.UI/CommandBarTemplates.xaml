@@ -116,7 +116,7 @@
                                 <Grid>
                                     <ContentPresenter x:Name="HeaderHost" ContentSource="Header" Margin="{DynamicResource CmdBar.Button.Padding}" RecognizesAccessKey="True"/>
                                     <Popup x:Name="PART_Popup" AllowsTransparency="True" Placement="Bottom" VerticalOffset="{DynamicResource CmdBar.Menu.PopupOffset}" IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}" Focusable="False">
-                                        <Border Background="{DynamicResource CmdBar.Background}" BorderBrush="{DynamicResource CmdBar.Border}" BorderThickness="1" CornerRadius="{DynamicResource CmdBar.Menu.CornerRadius}" Padding="2" Margin="{DynamicResource CmdBar.Menu.ShadowMargin}" Effect="{DynamicResource CmdBar.Menu.Shadow}">
+                                        <Border Background="{DynamicResource CmdBar.Background}" BorderBrush="{DynamicResource CmdBar.Border}" BorderThickness="1" CornerRadius="{DynamicResource CmdBar.Menu.CornerRadius}" Padding="2" Margin="{DynamicResource CmdBar.Menu.ShadowMargin}" Effect="{DynamicResource CmdBar.Menu.Shadow}" MinWidth="{DynamicResource CmdBar.Menu.MinWidth}">
                                             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="500" BorderThickness="0">
                                                 <ItemsPresenter />
                                             </ScrollViewer>
@@ -188,7 +188,7 @@
                                     <Path x:Name="SubmenuArrow" Grid.Column="3" Data="M 0,0 L 4,4 L 0,8 Z" Fill="{DynamicResource CmdBar.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="4,0,0,0"/>
 
                                     <Popup x:Name="PART_Popup" AllowsTransparency="True" Placement="Right" VerticalOffset="-4" HorizontalOffset="{DynamicResource CmdBar.Menu.PopupOffset}" IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}" Focusable="False">
-                                        <Border Background="{DynamicResource CmdBar.Background}" BorderBrush="{DynamicResource CmdBar.Border}" BorderThickness="1" CornerRadius="{DynamicResource CmdBar.Menu.CornerRadius}" Padding="2" Margin="{DynamicResource CmdBar.Menu.ShadowMargin}" Effect="{DynamicResource CmdBar.Menu.Shadow}">
+                                        <Border Background="{DynamicResource CmdBar.Background}" BorderBrush="{DynamicResource CmdBar.Border}" BorderThickness="1" CornerRadius="{DynamicResource CmdBar.Menu.CornerRadius}" Padding="2" Margin="{DynamicResource CmdBar.Menu.ShadowMargin}" Effect="{DynamicResource CmdBar.Menu.Shadow}" MinWidth="{DynamicResource CmdBar.Menu.MinWidth}">
                                             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="500" BorderThickness="0">
                                                 <ItemsPresenter />
                                             </ScrollViewer>
@@ -384,7 +384,7 @@
             BorderThickness="1" 
             CornerRadius="{DynamicResource CmdBar.Menu.CornerRadius}" 
             Padding="2" Margin="{DynamicResource CmdBar.Menu.ShadowMargin}"
-            Effect="{DynamicResource CmdBar.Menu.Shadow}">
+            Effect="{DynamicResource CmdBar.Menu.Shadow}" MinWidth="{DynamicResource CmdBar.Menu.MinWidth}">
 
                                         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="500" BorderThickness="0">
                                             <ItemsPresenter />
