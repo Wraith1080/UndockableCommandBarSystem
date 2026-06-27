@@ -263,7 +263,25 @@
                     </StackPanel>
                 </Grid>
             </TabItem>
+            <TabItem Header="Appearance">
+                <StackPanel Margin="20">
+                    <TextBlock Text="Application Theme" FontWeight="Bold" FontSize="14" Margin="0,0,0,10" Foreground="{DynamicResource CmdBar.Foreground}"/>
+                    <TextBlock Text="Choose the visual style for the toolbars and menus:" Opacity="0.7" Margin="0,0,0,15" Foreground="{DynamicResource CmdBar.Foreground}"/>
 
+                    <RadioButton x:Name="ThemeModernRadio" 
+                             Content="Modern (Fluent Design)" 
+                             IsChecked="True" 
+                             Margin="10,5" 
+                             Checked="ThemeRadio_Checked"
+                             Foreground="{DynamicResource CmdBar.Foreground}"/>
+
+                    <RadioButton x:Name="ThemeClassicRadio" 
+                             Content="Classic (Office 2003)" 
+                             Margin="10,5" 
+                             Checked="ThemeRadio_Checked"
+                             Foreground="{DynamicResource CmdBar.Foreground}"/>
+                </StackPanel>
+            </TabItem>
         </TabControl>
         <Grid x:Name="InputOverlay" Background="#80000000" Visibility="Collapsed" Panel.ZIndex="100">
             <Border Background="White" Width="260" Height="130" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="15" CornerRadius="4">

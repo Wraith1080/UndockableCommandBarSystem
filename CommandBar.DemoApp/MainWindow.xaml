@@ -25,6 +25,7 @@
 
             <TextBox AcceptsReturn="True" TextWrapping="Wrap" Margin="10" FontFamily="Consolas" FontSize="14"
                      Text="Type your document here..."/>
+            
         </DockPanel>
     </Grid>
 </Window>

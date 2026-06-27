@@ -392,5 +392,20 @@ namespace CommandBar.UI.Dialogs
             }
             return null;
         }
+
+        private void ThemeRadio_Checked(object sender, RoutedEventArgs e)
+        {
+            // Prevent the theme from swapping while the window is still constructing itself
+            if (!IsLoaded) return;
+
+            if (ThemeModernRadio?.IsChecked == true)
+            {
+                CommandBar.UI.ThemeManager.ChangeTheme("Modern");
+            }
+            else if (ThemeClassicRadio?.IsChecked == true)
+            {
+                CommandBar.UI.ThemeManager.ChangeTheme("Classic");
+            }
+        }
     }
 }
