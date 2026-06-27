@@ -24,6 +24,10 @@ namespace CommandBar.Core.Models
         [ObservableProperty]
         private DockLocation _dockLocation = DockLocation.Top;
 
+        // 🟢 ADD THIS: Remembers where to go back to when the floating window is closed
+        [ObservableProperty]
+        private DockLocation _previousDockLocation = DockLocation.Top;
+
         private double _floatingLeft;
         public double FloatingLeft
         {

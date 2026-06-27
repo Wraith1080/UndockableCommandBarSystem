@@ -61,6 +61,7 @@
                                         <Setter Property="DockPanel.Dock" Value="Right"/>
                                         <Setter Property="Padding" Value="4,2"/>
                                         <Setter Property="Margin" Value="2,0"/>
+                                        
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding Orientation, RelativeSource={RelativeSource AncestorType=ToolBar}}" Value="Vertical">
                                                 <Setter Property="DockPanel.Dock" Value="Bottom"/>
@@ -286,10 +287,17 @@
 
 					<ControlTemplate.Triggers>
 						<Trigger Property="HasOverflowItems" Value="True">
+                            <Setter TargetName="PART_OverflowButton" Property="Visibility" Value="Visible" />
 							<Setter TargetName="OverflowSeparator" Property="Visibility" Value="Visible" />
 						</Trigger>
 
-						<DataTrigger Binding="{Binding IsMenuBar, RelativeSource={RelativeSource Self}}" Value="True">
+                        <DataTrigger Binding="{Binding DockLocation}" Value="Floating">
+                            <Setter TargetName="PART_OverflowButton" Property="Visibility" Value="Collapsed" />
+                            <Setter TargetName="ToolBarThumb" Property="Visibility" Value="Collapsed" />
+                            <Setter TargetName="RootBorder" Property="BorderThickness" Value="0" />
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding IsMenuBar, RelativeSource={RelativeSource Self}}" Value="True">
 							<Setter TargetName="PART_OverflowButton" Property="Visibility" Value="Collapsed" />
 							<Setter TargetName="RootBorder" Property="BorderThickness" Value="0" />
 							<Setter TargetName="RootBorder" Property="Margin" Value="0" />
@@ -329,17 +337,58 @@
 
 		<Setter Property="Template">
 			<Setter.Value>
-				<ControlTemplate TargetType="{x:Type controls:FloatingToolBarWindow}">
-					<Border Background="{TemplateBinding Background}" 
-		BorderBrush="{TemplateBinding BorderBrush}" 
-		BorderThickness="{TemplateBinding BorderThickness}"
-		CornerRadius="{DynamicResource CmdBar.Window.CornerRadius}">
-						<AdornerDecorator>
-							<ContentPresenter Margin="2"/>
-						</AdornerDecorator>
-					</Border>
-				</ControlTemplate>
-			</Setter.Value>
+                <ControlTemplate TargetType="{x:Type controls:FloatingToolBarWindow}">
+                    <Border Background="Transparent" Padding="8">
+
+                        <Border Background="{DynamicResource CmdBar.Background}" 
+                BorderBrush="{DynamicResource CmdBar.Border}" 
+                BorderThickness="1"
+                CornerRadius="{DynamicResource CmdBar.Window.CornerRadius}"
+                Effect="{DynamicResource CmdBar.Menu.Shadow}">
+
+                            <DockPanel>
+
+                                <Border x:Name="PART_TitleBar" DockPanel.Dock="Top" Height="24" Background="Transparent" Cursor="SizeAll">
+                                    <Grid>
+                                        <TextBlock Text="{Binding Name}" 
+                                   VerticalAlignment="Center" 
+                                   Margin="8,0" 
+                                   FontSize="11" 
+                                   Opacity="0.7"
+                                   Foreground="{DynamicResource CmdBar.Foreground}"/>
+
+                                        <Button x:Name="PART_CloseButton" HorizontalAlignment="Right" Width="30" Focusable="False">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border x:Name="CloseBorder" Background="Transparent" CornerRadius="0,4,0,0">
+                                                        <Path Data="M 0,0 L 8,8 M 8,0 L 0,8" 
+                                              Stroke="{DynamicResource CmdBar.Foreground}" 
+                                              StrokeThickness="1" 
+                                              HorizontalAlignment="Center" 
+                                              VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="CloseBorder" Property="Background" Value="#E81123"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                    </Grid>
+                                </Border>
+
+                                <Border BorderThickness="0,1,0,0" BorderBrush="{DynamicResource CmdBar.Border}">
+                                    <AdornerDecorator>
+                                        <ContentPresenter Margin="0"/>
+                                    </AdornerDecorator>
+                                </Border>
+
+                            </DockPanel>
+                        </Border>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
 		</Setter>
 	</Style>
 	<!-- 1. Define the Merged Dictionaries block -->

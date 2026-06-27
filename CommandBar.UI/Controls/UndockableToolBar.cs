@@ -217,6 +217,9 @@ namespace CommandBar.UI.Controls
 
             floatingWindow.Content = floatingBar;
 
+            // 🟢 ADD THIS LINE: Save the dock state before we switch it to floating!
+            model.PreviousDockLocation = model.DockLocation;
+
             model.RequestDockChange(DockLocation.Floating);
 
             // 2. Get the exact screen coordinates of the cursor

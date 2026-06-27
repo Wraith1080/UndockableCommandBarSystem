@@ -36,6 +36,7 @@ namespace CommandBar.UI.Controls
 
         public FloatingToolBarWindow(CommandBar.Core.Models.ToolbarModel model)
         {
+            this.DataContext = model; // 🟢 ADD THIS: Allows the XAML Title Bar to see the Name!
             ShowInTaskbar = false;
             ShowActivated = false;
             Focusable = false;
@@ -43,6 +44,10 @@ namespace CommandBar.UI.Controls
             this.MinWidth = 120;
             this.MinHeight = 40;
             this.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            // ADD THESE 3 LINES: Strips the OS Titlebar and allows custom geometry
+            this.WindowStyle = WindowStyle.None;
+            this.AllowsTransparency = true;
+            this.Background = System.Windows.Media.Brushes.Transparent;
             if (Application.Current.MainWindow != null)
             {
                 this.Owner = Application.Current.MainWindow; // Keeps it above the main app!
@@ -146,6 +151,45 @@ namespace CommandBar.UI.Controls
                 OriginalToolBar?.ClearGhostAdorner();
                 OriginalToolBar?.CheckForRedock(this);
             }
+        }
+
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+
+            if (GetTemplateChild("PART_TitleBar") is FrameworkElement titleBar)
+            {
+                titleBar.MouseLeftButtonDown += (s, e) =>
+                {
+                    if (e.ButtonState == MouseButtonState.Pressed)
+                    {
+                        // 🟢 FIX: Use our mathematical drag instead of the OS drag so it triggers redocking!
+                        Point clickPos = e.GetPosition(this);
+                        StartManualDrag(clickPos.X, clickPos.Y);
+                    }
+                };
+            }
+
+            if (GetTemplateChild("PART_CloseButton") is System.Windows.Controls.Primitives.ButtonBase closeBtn)
+            {
+                closeBtn.Click += (s, e) =>
+                {
+                    // 🟢 FIX: Restore the toolbar to its previous home!
+                    if (this.DataContext is ToolbarModel model)
+                    {
+                        model.RequestDockChange(model.PreviousDockLocation);
+                    }
+                    this.Close();
+                };
+            }
+        }
+
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        {
+            // 🟢 FIX: Clear the visibility binding before the window dies. 
+            // This prevents WPF from throwing an exception if the user toggles the checkbox in the Customize menu later!
+            System.Windows.Data.BindingOperations.ClearBinding(this, Window.VisibilityProperty);
+            base.OnClosing(e);
         }
     }
 }
