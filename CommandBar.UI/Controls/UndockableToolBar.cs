@@ -245,7 +245,6 @@ namespace CommandBar.UI.Controls
             ClearGhostAdorner();
 
             var mainWindow = Application.Current.MainWindow;
-            // THE FIX: Change UIElement to FrameworkElement
             if (mainWindow == null || mainWindow.Content is not FrameworkElement mainContent) return;
 
             Point mousePos = Mouse.GetPosition(mainContent);
@@ -255,7 +254,38 @@ namespace CommandBar.UI.Controls
             {
                 if (this.DataContext is ToolbarModel model)
                 {
-                    // Because DataContext is now set, this will successfully fire!
+                    // 🟢 NEW: Find the exact ToolBarTray we are hovering over
+                    ToolBarTray? hitTray = null;
+                    var hitResult = VisualTreeHelper.HitTest(mainContent, mousePos);
+                    if (hitResult != null)
+                    {
+                        DependencyObject? current = hitResult.VisualHit;
+                        while (current != null)
+                        {
+                            if (current is ToolBarTray tray)
+                            {
+                                hitTray = tray;
+                                break;
+                            }
+                            current = VisualTreeHelper.GetParent(current);
+                        }
+                    }
+
+                    // 🟢 NEW: Inject the exact row and column coordinate into the model!
+                    if (hitTray != null)
+                    {
+                        Point posInTray = Mouse.GetPosition(hitTray);
+                        CalculateDropBandAndIndex(hitTray, posInTray, targetDock, out int newBand, out int newBandIndex);
+                        model.Band = newBand;
+                        model.BandIndex = newBandIndex;
+                    }
+                    else
+                    {
+                        // If they snap to the magnetic edge but miss the populated tray area completely, push to a new line
+                        model.Band = 999;
+                        model.BandIndex = 0;
+                    }
+
                     model.RequestDockChange(targetDock);
                 }
 
@@ -587,6 +617,87 @@ namespace CommandBar.UI.Controls
 
             // Otherwise, it stays floating!
             return Core.Models.DockLocation.Floating;
+        }
+
+        // 🟢 NEW: Calculates the exact Row (Band) and Column (BandIndex) based on mouse drop position
+        private void CalculateDropBandAndIndex(ToolBarTray tray, Point dropPos, Core.Models.DockLocation dock, out int band, out int bandIndex)
+        {
+            band = 0;
+            bandIndex = 0;
+            if (tray.ToolBars.Count == 0) return;
+
+            bool isHorizontal = (dock == Core.Models.DockLocation.Top || dock == Core.Models.DockLocation.Bottom);
+
+            double crossAxisPos = isHorizontal ? dropPos.Y : dropPos.X;
+            double mainAxisPos = isHorizontal ? dropPos.X : dropPos.Y;
+
+            int targetBand = -1;
+            int maxBand = 0;
+
+            // 1. Find the target row (Band)
+            foreach (ToolBar tb in tray.ToolBars)
+            {
+                int tbBand = tb.Band; // FIXED: Accessing property directly
+                if (tbBand > maxBand) maxBand = tbBand;
+
+                Point tbPos = tb.TranslatePoint(new Point(0, 0), tray);
+                double tbCrossStart = isHorizontal ? tbPos.Y : tbPos.X;
+                double tbCrossSize = isHorizontal ? tb.ActualHeight : tb.ActualWidth;
+
+                // Expand hit area slightly vertically to make dropping between rows forgiving
+                if (crossAxisPos >= tbCrossStart - 10 && crossAxisPos <= (tbCrossStart + tbCrossSize + 10))
+                {
+                    targetBand = tbBand;
+                    break;
+                }
+            }
+
+            if (targetBand == -1)
+            {
+                // Missed all existing bands, put it on a new one at the bottom
+                band = maxBand + 1;
+                bandIndex = 0;
+                return;
+            }
+
+            band = targetBand;
+            int targetIndex = 0;
+
+            // 2. Find the target column (BandIndex) inside that row
+            var barsInBand = new System.Collections.Generic.List<ToolBar>();
+            foreach (ToolBar tb in tray.ToolBars)
+            {
+                if (tb.Band == band) barsInBand.Add(tb); // FIXED: Accessing property directly
+            }
+
+            // Sort them spatially
+            barsInBand.Sort((a, b) =>
+            {
+                Point posA = a.TranslatePoint(new Point(0, 0), tray);
+                Point posB = b.TranslatePoint(new Point(0, 0), tray);
+                return isHorizontal ? posA.X.CompareTo(posB.X) : posA.Y.CompareTo(posB.Y);
+            });
+
+            foreach (var tb in barsInBand)
+            {
+                Point tbPos = tb.TranslatePoint(new Point(0, 0), tray);
+                double tbMainStart = isHorizontal ? tbPos.X : tbPos.Y;
+                double tbMainSize = isHorizontal ? tb.ActualWidth : tb.ActualHeight;
+
+                if (mainAxisPos < tbMainStart + (tbMainSize / 2))
+                {
+                    // Drop before this toolbar
+                    targetIndex = tb.BandIndex; // FIXED
+                    break;
+                }
+                else
+                {
+                    // Drop after this toolbar
+                    targetIndex = tb.BandIndex + 1; // FIXED
+                }
+            }
+
+            bandIndex = targetIndex;
         }
 
         private void OnMenuItemClick(object sender, System.Windows.RoutedEventArgs e)
