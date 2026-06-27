@@ -50,13 +50,27 @@
                                 </Thumb.Template>
                             </Thumb>
 
-                            <ToggleButton x:Name="PART_OverflowButton" DockPanel.Dock="Right" 
+                            <ToggleButton x:Name="PART_OverflowButton" 
 			  IsChecked="{Binding IsOverflowOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
-			  Padding="4,2" Margin="2,0" Cursor="Hand" 
+			  Cursor="Hand" 
 			  Background="Transparent" 
 			  BorderBrush="Transparent" 
 			  BorderThickness="1">
-								<ToggleButton.Template>
+                                <ToggleButton.Style>
+                                    <Style TargetType="ToggleButton">
+                                        <Setter Property="DockPanel.Dock" Value="Right"/>
+                                        <Setter Property="Padding" Value="4,2"/>
+                                        <Setter Property="Margin" Value="2,0"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Orientation, RelativeSource={RelativeSource AncestorType=ToolBar}}" Value="Vertical">
+                                                <Setter Property="DockPanel.Dock" Value="Bottom"/>
+                                                <Setter Property="Padding" Value="2,4"/>
+                                                <Setter Property="Margin" Value="0,2"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ToggleButton.Style>
+                                <ToggleButton.Template>
 									<ControlTemplate TargetType="ToggleButton">
 										<Border x:Name="RootBorder" 
 					Background="{TemplateBinding Background}" 
@@ -244,6 +258,12 @@
                                                             <Setter Property="IsCheckable" Value="True"/>
                                                             <Setter Property="IsChecked" Value="{Binding IsVisible, Mode=TwoWay}"/>
                                                             <Setter Property="StaysOpenOnClick" Value="True"/>
+
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsSeparator}" Value="True">
+                                                                    <Setter Property="Header" Value="(Separator)"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
                                                         </Style>
                                                     </MenuItem.ItemContainerStyle>
                                                 </MenuItem>

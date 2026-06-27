@@ -24,7 +24,8 @@
     <SolidColorBrush x:Key="CmdBar.Menu.Separator" Color="#E0E0E0"/>
 
     <CornerRadius x:Key="CmdBar.Button.CornerRadius">4</CornerRadius>
-    <Thickness x:Key="CmdBar.Button.Padding">8,4</Thickness>
+    <Thickness x:Key="CmdBar.Button.Padding">4,4</Thickness>
+    <Thickness x:Key="CmdBar.Button.Padding.Vertical">4,4</Thickness>
     <CornerRadius x:Key="CmdBar.Menu.CornerRadius">4</CornerRadius>
     <CornerRadius x:Key="CmdBar.Window.CornerRadius">8</CornerRadius>
 
@@ -36,7 +37,7 @@
     <StreamGeometry x:Key="CmdBar.ToolBar.OverflowIcon.Horizontal">M 0,0 L 4,4 L 8,0</StreamGeometry>
     <StreamGeometry x:Key="CmdBar.ToolBar.OverflowIcon.Vertical">M 0,0 L 4,4 L 0,8</StreamGeometry>
 
-    <Thickness x:Key="CmdBar.Menu.Margin">2,0</Thickness>
+    <Thickness x:Key="CmdBar.Menu.Margin">1,1</Thickness>
     <sys:Double x:Key="CmdBar.Menu.PopupOffset">4</sys:Double>
     <StreamGeometry x:Key="CmdBar.Menu.DropdownArrow">M 0,0 L 4,4 L 8,0 Z</StreamGeometry>
     <sys:Double x:Key="CmdBar.Menu.MinWidth">180</sys:Double>
@@ -44,7 +45,7 @@
     <Thickness x:Key="CmdBar.Menu.ShadowMargin">0,0,16,16</Thickness>
 
     <SolidColorBrush x:Key="CmdBar.ToolBar.Grip.Background" Color="#007ACC" />
-    <sys:Double x:Key="CmdBar.ToolBar.Grip.Thickness">3</sys:Double>
+    <sys:Double x:Key="CmdBar.ToolBar.Grip.Thickness">3.5</sys:Double>
     <CornerRadius x:Key="CmdBar.ToolBar.Grip.CornerRadius">2</CornerRadius>
     <Thickness x:Key="CmdBar.ToolBar.Grip.Margin">2,4,4,4</Thickness>
 

@@ -20,10 +20,15 @@
         BorderBrush="{TemplateBinding BorderBrush}" 
         BorderThickness="{TemplateBinding BorderThickness}" 
         CornerRadius="{DynamicResource CmdBar.Button.CornerRadius}">
-                        <ContentPresenter HorizontalAlignment="Center" 
+                        <ContentPresenter HorizontalAlignment="Center" x:Name="ContentHost"
                       VerticalAlignment="Center" 
                       Margin="{DynamicResource CmdBar.Button.Padding}"/>
                     </Border>
+                    <ControlTemplate.Triggers>
+                        <DataTrigger Binding="{Binding Orientation, RelativeSource={RelativeSource AncestorType=ToolBar}}" Value="Vertical">
+                            <Setter TargetName="ContentHost" Property="Margin" Value="{DynamicResource CmdBar.Button.Padding.Vertical}"/>
+                        </DataTrigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -54,8 +59,13 @@
         CornerRadius="{DynamicResource CmdBar.Button.CornerRadius}">
                         <ContentPresenter HorizontalAlignment="Center" 
                       VerticalAlignment="Center" 
-                      Margin="{DynamicResource CmdBar.Button.Padding}"/>
+                      Margin="{DynamicResource CmdBar.Button.Padding}" x:Name="ContentHost"/>
                     </Border>
+                    <ControlTemplate.Triggers>
+                        <DataTrigger Binding="{Binding Orientation, RelativeSource={RelativeSource AncestorType=ToolBar}}" Value="Vertical">
+                            <Setter TargetName="ContentHost" Property="Margin" Value="{DynamicResource CmdBar.Button.Padding.Vertical}"/>
+                        </DataTrigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -355,15 +365,31 @@
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type models:CommandSeparator}">
-        <Border Width="1" Background="{DynamicResource CmdBar.Border}" Margin="2,4" 
-                HorizontalAlignment="Center" VerticalAlignment="Stretch"
-                Visibility="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+        <Border x:Name="SepBorder" 
+            Width="1" 
+            Background="{DynamicResource CmdBar.Border}" 
+            Margin="2,4" 
+            HorizontalAlignment="Center" 
+            VerticalAlignment="Stretch"
+            Visibility="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ToolBar}, Path=Orientation}" Value="Vertical">
+                <Setter TargetName="SepBorder" Property="Width" Value="NaN"/>
+                <Setter TargetName="SepBorder" Property="Height" Value="1"/>
+
+                <Setter TargetName="SepBorder" Property="Margin" Value="4,2"/>
+
+                <Setter TargetName="SepBorder" Property="HorizontalAlignment" Value="Stretch"/>
+                <Setter TargetName="SepBorder" Property="VerticalAlignment" Value="Center"/>
+            </DataTrigger>
+        </DataTemplate.Triggers>
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type models:CommandDropdownItem}">
         <Menu x:Name="RootMenu" Background="Transparent" Margin="{DynamicResource CmdBar.Menu.Margin}" Visibility="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
 
-            <MenuItem Focusable="False" Padding="{DynamicResource CmdBar.Button.Padding}" ItemsSource="{Binding ChildItems}">
+            <MenuItem Focusable="False" Padding="{DynamicResource CmdBar.Button.Padding}" ItemsSource="{Binding ChildItems}" x:Name="RootMenuItem">
 
                 <MenuItem.Template>
                     <ControlTemplate TargetType="MenuItem">
@@ -501,6 +527,9 @@
         </Menu>
 
         <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type ToolBar}}, Path=Orientation}" Value="Vertical">
+                <Setter TargetName="RootMenuItem" Property="Padding" Value="{DynamicResource CmdBar.Button.Padding.Vertical}" />
+            </DataTrigger>
             <DataTrigger Binding="{Binding DisplayMode}" Value="ImageOnly">
                 <Setter TargetName="LabelText" Property="Visibility" Value="Collapsed" />
                 <Setter TargetName="IconPath" Property="Margin" Value="0" />
