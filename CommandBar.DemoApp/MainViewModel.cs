@@ -146,8 +146,10 @@ namespace CommandBar.DemoApp
             // Standard
             Manager.RegisterCommand("App.New", new CommandItem { Text = "New", Tooltip = "New File", DisplayMode = CommandDisplayMode.ImageOnly, IconGeometry = iconNew });
             Manager.RegisterCommand("App.Open", new CommandItem { Text = "Open", Tooltip = "Open File", DisplayMode = CommandDisplayMode.ImageOnly, IconGeometry = iconOpen });
+            CommandItem SaveAsCommand = new CommandItem { Text = "Save As", Tooltip = "Save As...", DisplayMode = CommandDisplayMode.ImageOnly, IconGeometry = iconSaveAs, ShortcutText = "Ctrl+Shift+S" };
+            SaveAsCommand.ActionCallback = SaveAs; // Hook up the Save As command to the SaveAs method
             Manager.RegisterCommand("App.Save", new CommandItem { Text = "Save", Tooltip = "Save", DisplayMode = CommandDisplayMode.ImageOnly, IconGeometry = iconSave });
-            Manager.RegisterCommand("App.SaveAs", new CommandItem { Text = "Save As", Tooltip = "Save As...", DisplayMode = CommandDisplayMode.ImageOnly, IconGeometry = iconSaveAs });
+            Manager.RegisterCommand("App.SaveAs", SaveAsCommand);
 
             // Edit
             Manager.RegisterCommand("App.Cut", new CommandItem { Text = "Cut", Tooltip = "Cut", DisplayMode = CommandDisplayMode.ImageOnly, IconGeometry = iconCut });
@@ -243,6 +245,11 @@ namespace CommandBar.DemoApp
                 string json = File.ReadAllText("DefaultLayout.json");
                 Manager.LoadLayoutFromJson(json);
             }
+        }
+
+        public void SaveAs()
+        {
+            MessageBox.Show("This is Save as function");
         }
     }
 }

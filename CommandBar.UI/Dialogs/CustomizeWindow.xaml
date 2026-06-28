@@ -35,8 +35,8 @@
                         <Button HorizontalAlignment="Right" Width="40" Focusable="False" Click="CloseButton_Click">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <Border x:Name="CloseBorder" Background="Transparent" CornerRadius="0,4,0,0">
-                                        <Path x:Name="CloseIcon" Data="M 0,0 L 10,10 M 10,0 L 0,10" 
+                                    <Border x:Name="CloseBorder" Background="Transparent" CornerRadius="{DynamicResource CmdBar.Customize.CloseButtonCornerRadius}" Cursor="Arrow">
+                                        <Path x:Name="CloseIcon" Data="{DynamicResource CmdBar.Customize.CloseButtonIcon}" 
                                               Stroke="{DynamicResource CmdBar.Foreground}" 
                                               StrokeThickness="1" 
                                               HorizontalAlignment="Center" 
