@@ -422,5 +422,15 @@ namespace CommandBar.UI.Dialogs
         {
             this.Close();
         }
+
+        private void IconScaleSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            // Ensure Application is running and resources are available
+            if (Application.Current == null) return;
+
+            // Overwrite the dynamic resource. 
+            // Every icon bound to "CmdBar.IconSize" will instantly resize!
+            Application.Current.Resources["CmdBar.IconSize"] = e.NewValue;
+        }
     }
 }

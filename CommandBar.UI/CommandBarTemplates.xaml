@@ -81,10 +81,10 @@
         </Style.Triggers>
     </Style>
 
-    <Grid x:Key="DualMenuIcon" x:Shared="False" Width="16" Height="16">
-        <ContentControl Content="{Binding IconGeometry, Converter={StaticResource PathConverter}}">
-            <ContentControl.Style>
-                <Style TargetType="ContentControl">
+    <Grid x:Key="DualMenuIcon" x:Shared="False" Width="{DynamicResource CmdBar.IconSize}" Height="{DynamicResource CmdBar.IconSize}">
+        <Path Data="{Binding IconGeometry}" Fill="{DynamicResource CmdBar.IconFill}" Stretch="Uniform">
+            <Path.Style>
+                <Style TargetType="Path">
                     <Setter Property="Visibility" Value="Collapsed"/>
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding KeepOriginalColors}" Value="False">
@@ -92,9 +92,10 @@
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
-            </ContentControl.Style>
-        </ContentControl>
-        <Image Source="{Binding RawSvgContent, Converter={StaticResource RawSvgConverter}}">
+            </Path.Style>
+        </Path>
+        <Image Source="{Binding RawSvgContent, Converter={StaticResource RawSvgConverter}}" Width="{DynamicResource CmdBar.IconSize}"
+       Height="{DynamicResource CmdBar.IconSize}">
             <Image.Style>
                 <Style TargetType="Image">
                     <Setter Property="Visibility" Value="Collapsed"/>
@@ -128,7 +129,7 @@
                                     <Popup x:Name="PART_Popup" AllowsTransparency="True" Placement="Bottom" VerticalOffset="{DynamicResource CmdBar.Menu.PopupOffset}" IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}" Focusable="False">
                                         <Border Background="{DynamicResource CmdBar.Background}" BorderBrush="{DynamicResource CmdBar.Border}" BorderThickness="1" CornerRadius="{DynamicResource CmdBar.Menu.CornerRadius}" Padding="2" Margin="{DynamicResource CmdBar.Menu.ShadowMargin}" Effect="{DynamicResource CmdBar.Menu.Shadow}" MinWidth="{DynamicResource CmdBar.Menu.MinWidth}">
                                             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="500" BorderThickness="0">
-                                                <ItemsPresenter />
+                                                <ItemsPresenter Grid.IsSharedSizeScope="True" />
                                             </ScrollViewer>
                                         </Border>
                                     </Popup>
@@ -154,13 +155,13 @@
                             <Border x:Name="ItemBorder" Background="Transparent" CornerRadius="{DynamicResource CmdBar.Button.CornerRadius}" Margin="2,1">
                                 <Grid Margin="4">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="24" />
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="IconColumnGroup" MinWidth="{DynamicResource CmdBar.IconSize}" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="14" />
                                     </Grid.ColumnDefinitions>
 
-                                    <ContentPresenter ContentSource="Icon" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                    <ContentPresenter Margin="0,0,8,0" ContentSource="Icon" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     <ContentPresenter Grid.Column="1" ContentSource="Header" VerticalAlignment="Center" RecognizesAccessKey="True"/>
                                     <TextBlock Grid.Column="2" Text="{TemplateBinding InputGestureText}" Margin="16,0,0,0" Opacity="0.6" VerticalAlignment="Center"/>
                                 </Grid>
@@ -185,13 +186,13 @@
                             <Border x:Name="ItemBorder" Background="Transparent" CornerRadius="{DynamicResource CmdBar.Button.CornerRadius}" Margin="2,1">
                                 <Grid Margin="4">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="24" />
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="IconColumnGroup" MinWidth="{DynamicResource CmdBar.IconSize}" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="14" />
                                     </Grid.ColumnDefinitions>
 
-                                    <ContentPresenter ContentSource="Icon" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                    <ContentPresenter Margin="0,0,8,0" ContentSource="Icon" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     <ContentPresenter Grid.Column="1" ContentSource="Header" VerticalAlignment="Center" RecognizesAccessKey="True"/>
                                     <TextBlock Grid.Column="2" Text="{TemplateBinding InputGestureText}" Margin="16,0,0,0" Opacity="0.6" VerticalAlignment="Center"/>
 
@@ -200,7 +201,7 @@
                                     <Popup x:Name="PART_Popup" AllowsTransparency="True" Placement="Right" VerticalOffset="-4" HorizontalOffset="{DynamicResource CmdBar.Menu.PopupOffset}" IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}" Focusable="False">
                                         <Border Background="{DynamicResource CmdBar.Background}" BorderBrush="{DynamicResource CmdBar.Border}" BorderThickness="1" CornerRadius="{DynamicResource CmdBar.Menu.CornerRadius}" Padding="2" Margin="{DynamicResource CmdBar.Menu.ShadowMargin}" Effect="{DynamicResource CmdBar.Menu.Shadow}" MinWidth="{DynamicResource CmdBar.Menu.MinWidth}">
                                             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="500" BorderThickness="0">
-                                                <ItemsPresenter />
+                                                <ItemsPresenter Grid.IsSharedSizeScope="True" />
                                             </ScrollViewer>
                                         </Border>
                                     </Popup>
@@ -226,7 +227,13 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="MenuItem">
-                            <Rectangle Height="1" Fill="{DynamicResource CmdBar.Border}" Margin="32,2,2,2"/>
+                            <Grid Margin="4,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="IconColumnGroup" MinWidth="{DynamicResource CmdBar.IconSize}" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Rectangle Grid.Column="1" Height="1" Fill="{DynamicResource CmdBar.Border}" Margin="0,0,2,0"/>
+                            </Grid>
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
@@ -241,7 +248,7 @@
     <DataTemplate DataType="{x:Type models:CommandItem}">
         <Button x:Name="RootButton" Style="{StaticResource CommandButtonStyle}" Command="{Binding ExecuteItemCommand}" Focusable="False" ToolTip="{Binding Tooltip}" Visibility="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <StackPanel Orientation="Horizontal">
-                <Grid x:Name="IconPath" Width="14" Height="14" Margin="0,0,4,0">
+                <Grid x:Name="IconPath" Width="{DynamicResource CmdBar.IconSize}" Height="{DynamicResource CmdBar.IconSize}" Margin="0,0,4,0">
 
                     <Path Data="{Binding IconGeometry}" Fill="{DynamicResource CmdBar.IconFill}" Stretch="Uniform">
                         <Path.Style>
@@ -256,7 +263,7 @@
                         </Path.Style>
                     </Path>
 
-                    <Image Source="{Binding RawSvgContent, Converter={StaticResource RawSvgConverter}}">
+                    <Image Source="{Binding RawSvgContent, Converter={StaticResource RawSvgConverter}}" Width="{DynamicResource CmdBar.IconSize}" Height="{DynamicResource CmdBar.IconSize}">
                         <Image.Style>
                             <Style TargetType="Image">
                                 <Setter Property="Visibility" Value="Collapsed"/>
@@ -304,7 +311,7 @@
     <DataTemplate DataType="{x:Type models:CommandToggleItem}">
         <ToggleButton x:Name="RootButton" Style="{StaticResource CommandToggleButtonStyle}" IsChecked="{Binding IsChecked, Mode=TwoWay}" Command="{Binding ExecuteItemCommand}" Focusable="False" ToolTip="{Binding Tooltip}" Visibility="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <StackPanel Orientation="Horizontal">
-                <Grid x:Name="IconPath" Width="14" Height="14" Margin="0,0,4,0">
+                <Grid x:Name="IconPath" Width="{DynamicResource CmdBar.IconSize}" Height="{DynamicResource CmdBar.IconSize}" Margin="0,0,4,0">
 
                     <Path Data="{Binding IconGeometry}" Fill="{DynamicResource CmdBar.IconFill}" Stretch="Uniform">
                         <Path.Style>
@@ -319,7 +326,7 @@
                         </Path.Style>
                     </Path>
 
-                    <Image Source="{Binding RawSvgContent, Converter={StaticResource RawSvgConverter}}">
+                    <Image Source="{Binding RawSvgContent, Converter={StaticResource RawSvgConverter}}" Width="{DynamicResource CmdBar.IconSize}" Height="{DynamicResource CmdBar.IconSize}">
                         <Image.Style>
                             <Style TargetType="Image">
                                 <Setter Property="Visibility" Value="Collapsed"/>
@@ -413,7 +420,7 @@
             Effect="{DynamicResource CmdBar.Menu.Shadow}" MinWidth="{DynamicResource CmdBar.Menu.MinWidth}">
 
                                         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="500" BorderThickness="0">
-                                            <ItemsPresenter />
+                                            <ItemsPresenter Grid.IsSharedSizeScope="True" />
                                         </ScrollViewer>
 
                                     </Border>
@@ -449,10 +456,14 @@
 
                 <MenuItem.Header>
                     <StackPanel Orientation="Horizontal">
-                        <Grid x:Name="IconPath" Width="14" Height="14" Margin="0,0,4,0">
-                            <ContentControl Content="{Binding IconGeometry, Converter={StaticResource PathConverter}}">
-                                <ContentControl.Style>
-                                    <Style TargetType="ContentControl">
+                        <Grid x:Name="IconPath" Margin="0,0,4,0">
+                            <Path Data="{Binding IconGeometry}" 
+      Fill="{DynamicResource CmdBar.IconFill}" 
+      Stretch="Uniform" 
+      Width="{DynamicResource CmdBar.IconSize}" 
+      Height="{DynamicResource CmdBar.IconSize}">
+                                <Path.Style>
+                                    <Style TargetType="Path">
                                         <Setter Property="Visibility" Value="Collapsed"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding KeepOriginalColors}" Value="False">
@@ -460,9 +471,9 @@
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
-                                </ContentControl.Style>
-                            </ContentControl>
-                            <Image Source="{Binding RawSvgContent, Converter={StaticResource RawSvgConverter}}">
+                                </Path.Style>
+                            </Path>
+                            <Image Source="{Binding RawSvgContent, Converter={StaticResource RawSvgConverter}}" Width="{DynamicResource CmdBar.IconSize}" Height="{DynamicResource CmdBar.IconSize}">
                                 <Image.Style>
                                     <Style TargetType="Image">
                                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -499,12 +510,12 @@
                                         Margin="2,1">
                                         <Grid Margin="4">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="24" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="IconColumnGroup" MinWidth="{DynamicResource CmdBar.IconSize}" />
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
 
-                                            <ContentPresenter ContentSource="Icon" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                            <ContentPresenter Margin="0,0,8,0" ContentSource="Icon" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                             <ContentPresenter Grid.Column="1" ContentSource="Header" VerticalAlignment="Center" RecognizesAccessKey="True"/>
                                             <TextBlock Grid.Column="2" Text="{TemplateBinding InputGestureText}" Margin="16,0,0,0" Opacity="0.6" VerticalAlignment="Center"/>
                                         </Grid>

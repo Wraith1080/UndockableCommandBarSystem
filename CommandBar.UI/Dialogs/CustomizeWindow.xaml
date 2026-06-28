@@ -322,6 +322,24 @@
                          Margin="10,5" 
                          Checked="ThemeRadio_Checked"
                          Foreground="{DynamicResource CmdBar.Foreground}"/>
+                                <GroupBox Header="Icon Scaling" Margin="0,10,0,0" Padding="10">
+                                    <StackPanel>
+                                        <TextBlock Text="Adjust Toolbar &amp; Menu Icon Size:" Margin="0,0,0,10" Foreground="{DynamicResource CmdBar.Foreground}"/>
+
+                                        <Slider x:Name="IconScaleSlider" 
+                Minimum="12" 
+                Maximum="32" 
+                TickFrequency="4" 
+                IsSnapToTickEnabled="True" 
+                Value="{DynamicResource CmdBar.IconSize}" 
+                ValueChanged="IconScaleSlider_ValueChanged" />
+
+                                        <TextBlock Text="{Binding ElementName=IconScaleSlider, Path=Value, StringFormat={}{0} px}" 
+                   HorizontalAlignment="Center" 
+                   Margin="0,5,0,0" 
+                   Foreground="{DynamicResource CmdBar.Foreground}"/>
+                                    </StackPanel>
+                                </GroupBox>
                             </StackPanel>
                         </TabItem>
                     </TabControl>
