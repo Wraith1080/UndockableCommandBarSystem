@@ -3,25 +3,29 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:CommandBar.DemoApp"
         xmlns:controls="clr-namespace:CommandBar.UI.Controls;assembly=CommandBar.UI"
-        Title="Undockable CommandBar Test" Height="450" Width="800">
+        Title="Undockable CommandBar System" Height="768" Width="1024" WindowStartupLocation="CenterScreen">
 
     <Window.DataContext>
         <local:MainViewModel />
     </Window.DataContext>
 
-    <AdornerDecorator>
-        <Grid>
-            <DockPanel>
-                <controls:UndockableToolBar DockPanel.Dock="Top" 
-                                            ItemsSource="{Binding MainToolbar.DockedItems}" />
+    <Grid>
+        <DockPanel>
+            <ToolBarTray DockPanel.Dock="Top" Background="#F3F3F3" Orientation="Horizontal"
+                         controls:ToolBarTrayBehavior.ItemsSource="{Binding TopToolbars}" />
 
-                <TextBox AcceptsReturn="True" 
-                         TextWrapping="Wrap" 
-                         Text="Type your document here..." 
-                         Margin="10" 
-                         FontFamily="Consolas" 
-                         FontSize="14"/>
-            </DockPanel>
-        </Grid>
-    </AdornerDecorator>
+            <ToolBarTray DockPanel.Dock="Bottom" Background="#F3F3F3" Orientation="Horizontal"
+                         controls:ToolBarTrayBehavior.ItemsSource="{Binding BottomToolbars}" />
+
+            <ToolBarTray DockPanel.Dock="Left" Background="#F3F3F3" Orientation="Vertical"
+                         controls:ToolBarTrayBehavior.ItemsSource="{Binding LeftToolbars}" />
+
+            <ToolBarTray DockPanel.Dock="Right" Background="#F3F3F3" Orientation="Vertical"
+                         controls:ToolBarTrayBehavior.ItemsSource="{Binding RightToolbars}" />
+
+            <TextBox AcceptsReturn="True" TextWrapping="Wrap" Margin="10" FontFamily="Consolas" FontSize="14"
+                     Text="Type your document here..."/>
+            
+        </DockPanel>
+    </Grid>
 </Window>

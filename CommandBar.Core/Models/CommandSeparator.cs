@@ -1,14 +1,24 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-
-namespace CommandBar.Core.Models
+﻿namespace CommandBar.Core.Models
 {
-    public partial class CommandSeparator : CommandItem
+    public class CommandSeparator : CommandItem
     {
-        // We override or ignore the ActionCallback and Text since it's just a visual divider.
-        public CommandSeparator()
+        // NEW: Flags this specific item as a separator
+        public override bool IsSeparator => true;
+
+        public override CommandItem Clone()
         {
-            Text = "Separator";
-            IsEnabled = false; // Prevents hover/click states in the UI
+            return new CommandSeparator
+            {
+                Id = this.Id,
+                Text = this.Text,
+                Tooltip = this.Tooltip,
+                IconGeometry = this.IconGeometry,
+                ActionCallback = this.ActionCallback,
+                DisplayMode = this.DisplayMode,
+                KeepOriginalColors = this.KeepOriginalColors,
+                RawSvgContent = this.RawSvgContent,
+                IsVisible = this.IsVisible
+            };
         }
     }
 }

@@ -1,44 +1,81 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommandBar.Core.Models;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System;
-
+using System.Windows.Input;
 namespace CommandBar.Core.Models
 {
-    // Inheriting from ObservableObject gives us INotifyPropertyChanged automatically
     public partial class CommandItem : ObservableObject
     {
         [ObservableProperty]
-        private string _id = Guid.NewGuid().ToString();
+        private string _id = string.Empty;
 
         [ObservableProperty]
-        private string _text = "New Item";
+        private string _text = string.Empty;
 
         [ObservableProperty]
         private string _tooltip = string.Empty;
 
         [ObservableProperty]
-        private string _iconGeometry = string.Empty; // Holds Vector Path Data for crisp scaling
+        private string _iconGeometry = string.Empty;
 
         [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(ExecuteItemCommand))]
-        private bool _isEnabled = true;
+        private string _shortcutText = string.Empty; // e.g., "Ctrl+S"
 
+        // NEW: Controls how the UI renders this specific button
         [ObservableProperty]
-        private bool _isVisible = true;
+        private CommandDisplayMode _displayMode = CommandDisplayMode.ImageAndText;
 
-        // The actual action to run when clicked
         public Action? ActionCallback { get; set; }
+        public ICommand ExecuteItemCommand => new RelayCommand(() => ActionCallback?.Invoke());
 
-        // The RelayCommand generates our ICommand binding for the WPF UI
-        [RelayCommand(CanExecute = nameof(CanExecuteItem))]
-        private void ExecuteItem()
+        // NEW: Allows native menus to know if this is a separator without using a DataTemplate
+        public virtual bool IsSeparator => false;
+
+        // Add this to your existing CommandItem.cs
+        private bool _isVisible = true;
+        public bool IsVisible
         {
-            ActionCallback?.Invoke();
+            get => _isVisible;
+            set => SetProperty(ref _isVisible, value);
         }
 
-        private bool CanExecuteItem()
+        public string DefaultText { get; set; } = string.Empty;
+        public string DefaultTooltip { get; set; } = string.Empty;
+        public string DefaultIconGeometry { get; set; } = string.Empty;
+
+        private bool _keepOriginalColors;
+        public bool KeepOriginalColors
         {
-            return IsEnabled;
+            get => _keepOriginalColors;
+            set => SetProperty(ref _keepOriginalColors, value);
+        }
+
+        // 🟢 NEW: The Raw XML string for SharpVectors
+        private string _rawSvgContent = string.Empty;
+        public string RawSvgContent
+        {
+            get => _rawSvgContent;
+            set => SetProperty(ref _rawSvgContent, value);
+        }
+
+        // 🟢 NEW: Factory defaults for the Reset button
+        public bool DefaultKeepOriginalColors { get; set; }
+        public string DefaultRawSvgContent { get; set; } = string.Empty;
+
+        public virtual CommandItem Clone()
+        {
+            return new CommandItem
+            {
+                Id = this.Id,
+                Text = this.Text,
+                Tooltip = this.Tooltip,
+                IconGeometry = this.IconGeometry,
+                ActionCallback = this.ActionCallback,
+                DisplayMode = this.DisplayMode,
+                KeepOriginalColors = this.KeepOriginalColors,
+                RawSvgContent = this.RawSvgContent,
+                IsVisible = this.IsVisible
+            };
         }
     }
 }

@@ -1,27 +1,83 @@
-﻿using System;
+﻿using CommandBar.Core.Models;
+using System;
+using System.Collections;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace CommandBar.UI.Controls
 {
     public class UndockableToolBar : ToolBar
     {
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool GetCursorPos(out POINT lpPoint);
+
+        [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+        public struct POINT
+        {
+            public int X;
+            public int Y;
+        }
+
+        // NEW: Controls how close the mouse must be to an edge(in pixels) to trigger docking
+        public double EdgeSnapThreshold { get; set; } = 60.0;
+
+        // NEW: Controls how far the user must drag outside the tray to trigger a tear-off
+        public double TearOffThreshold { get; set; } = 30.0;
+
+        // UPGRADED: Now it can receive data bindings!
+        public static readonly DependencyProperty IsCustomizeModeProperty =
+            DependencyProperty.Register("IsCustomizeMode", typeof(bool), typeof(UndockableToolBar), new PropertyMetadata(false));
+
+        public bool IsCustomizeMode
+        {
+            get => (bool)GetValue(IsCustomizeModeProperty);
+            set => SetValue(IsCustomizeModeProperty, value);
+        }
+
         private UIElement? _dragGrip;
         private bool _isDragging;
         private Point _startMousePosition;
+        private Point _itemDragStart;
+        private bool _isPreparingToDragItem;
+        private InsertionCaretAdorner? _caretAdorner;
+        // NEW: Stores the ghost so we can remove it or update its rotation safely!
+        private DockingGhostAdorner? _ghostAdorner;
+
+        public UndockableToolBar()
+        {
+            // CRITICAL: Tells the OS this control is allowed to accept dropped items
+            AllowDrop = true;
+            // NEW: Prevent the toolbar background and drag-grip from accepting focus
+            Focusable = false;
+
+            // 🟢 NEW: Listen for ANY menu item click that bubbles up from the popup
+            this.AddHandler(System.Windows.Controls.MenuItem.ClickEvent, new System.Windows.RoutedEventHandler(OnMenuItemClick));
+        }
 
         // NEW: Keep track of the active ghost so we can remove it later
         private DockingGhostAdorner? _currentAdorner;
 
         public static readonly DependencyProperty TearOffOffsetXProperty =
-            DependencyProperty.Register(nameof(TearOffOffsetX), typeof(double), typeof(UndockableToolBar), new PropertyMetadata(10.0));
+            DependencyProperty.Register(nameof(TearOffOffsetX), typeof(double), typeof(UndockableToolBar), new PropertyMetadata(20.0));
 
         public static readonly DependencyProperty TearOffOffsetYProperty =
-            DependencyProperty.Register(nameof(TearOffOffsetY), typeof(double), typeof(UndockableToolBar), new PropertyMetadata(10.0));
+            DependencyProperty.Register(nameof(TearOffOffsetY), typeof(double), typeof(UndockableToolBar), new PropertyMetadata(15.0));
 
+        // NEW: Dependency Property so XAML Triggers can see if this is a MenuBar
+        public static readonly DependencyProperty IsMenuBarProperty =
+            DependencyProperty.Register("IsMenuBar", typeof(bool), typeof(UndockableToolBar), new PropertyMetadata(false));
+
+        public bool IsMenuBar
+        {
+            get { return (bool)GetValue(IsMenuBarProperty); }
+            set { SetValue(IsMenuBarProperty, value); }
+        }
         public double TearOffOffsetX
         {
             get => (double)GetValue(TearOffOffsetXProperty);
@@ -45,40 +101,64 @@ namespace CommandBar.UI.Controls
         {
             base.OnApplyTemplate();
 
-            _dragGrip = GetTemplateChild("PART_DragGrip") as UIElement;
-
-            if (_dragGrip != null)
+            // Find the native dotted grip built into the standard WPF ToolBar
+            if (GetTemplateChild("ToolBarThumb") is System.Windows.Controls.Primitives.Thumb thumb)
             {
-                _dragGrip.MouseLeftButtonDown += DragGrip_MouseLeftButtonDown;
-                _dragGrip.MouseMove += DragGrip_MouseMove;
-                _dragGrip.MouseLeftButtonUp += DragGrip_MouseLeftButtonUp;
+                // 🟢 ADD THIS: Capture the state the exact moment the drag begins!
+                thumb.DragStarted += Thumb_DragStarted;
+
+                // Listen to it move instead of hijacking the initial click!
+                thumb.DragDelta += Thumb_DragDelta;
             }
         }
 
-        private void DragGrip_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void Thumb_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
+        {
+            if (this.DataContext is Core.Models.ToolbarModel model)
+            {
+                // Save the exact state before the WPF ToolBarTray tries to move anything!
+                model.PreviousDockLocation = model.DockLocation;
+                model.PreviousBand = model.Band;
+                model.PreviousBandIndex = model.BandIndex;
+            }
+        }
+
+        private void Thumb_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
         {
             var parentWindow = Window.GetWindow(this);
+
+            // 1. ARE WE ALREADY FLOATING?
             if (parentWindow is FloatingToolBarWindow floatingWindow)
             {
-                if (e.ButtonState == MouseButtonState.Pressed)
-                {
-                    floatingWindow.LocationChanged += FloatingWindow_LocationChanged;
-                    
-                    floatingWindow.DragMove(); 
-                    
-                    floatingWindow.LocationChanged -= FloatingWindow_LocationChanged;
-                    
-                    // NEW: Ask the ORIGINAL toolbar to clear the ghost!
-                    floatingWindow.OriginalToolBar?.ClearGhostAdorner();
+                // Force the native grip to release the mouse...
+                var thumb = sender as System.Windows.Controls.Primitives.Thumb;
+                thumb?.CancelDrag();
 
-                    floatingWindow.OriginalToolBar?.CheckForRedock(floatingWindow);
-                }
-                return; 
+                // ...and instantly pass control to your custom floating window drag loop!
+                Point offset = Mouse.GetPosition(floatingWindow);
+                floatingWindow.StartManualDrag(offset.X, offset.Y);
+                return;
             }
 
-            _isDragging = true;
-            _startMousePosition = e.GetPosition(this);
-            _dragGrip?.CaptureMouse();
+            // 2. WE ARE DOCKED IN THE TRAY
+            var tray = this.Parent as ToolBarTray ?? System.Windows.Media.VisualTreeHelper.GetParent(this) as ToolBarTray;
+
+            if (tray != null)
+            {
+                Point mousePos = Mouse.GetPosition(tray);
+                double tearOffThreshold = TearOffThreshold;
+
+                // 3. Did they drag it off the tray?
+                if (mousePos.X < -tearOffThreshold || mousePos.Y < -tearOffThreshold ||
+                    mousePos.X > tray.ActualWidth + tearOffThreshold || mousePos.Y > tray.ActualHeight + tearOffThreshold)
+                {
+                    // THE SEAMLESS HANDOFF
+                    var thumb = sender as System.Windows.Controls.Primitives.Thumb;
+                    thumb?.CancelDrag();
+
+                    InitiateTearOff();
+                }
+            }
         }
 
         private void DragGrip_MouseMove(object sender, MouseEventArgs e)
@@ -106,63 +186,159 @@ namespace CommandBar.UI.Controls
 
         private void InitiateTearOff()
         {
-            var floatingWindow = new FloatingToolBarWindow();
+            if (!(this.DataContext is Core.Models.ToolbarModel model)) return;
+
+            // 🟢 FIX: Pass the model directly into the new constructor
+            var floatingWindow = new FloatingToolBarWindow(model);
 
             // NEW: Give the floating window a reference to this original toolbar
             floatingWindow.OriginalToolBar = this;
 
-            var floatingBar = new UndockableToolBar
+            var floatingBar = new UndockableToolBar();
+            floatingBar.DataContext = this.DataContext;
+            floatingBar.IsMenuBar = this.IsMenuBar;
+
+            // NEW: Bind the floating palette to the main application window!
+            // This prevents the OS from treating it as a competing, separate application.
+            var mainWindow = Window.GetWindow(this);
+            if (mainWindow != null)
             {
-                ItemsSource = this.ItemsSource
-            };
+                floatingWindow.Owner = mainWindow;
+                floatingBar.SetBinding(UndockableToolBar.IsCustomizeModeProperty, new Binding("DataContext.Manager.IsCustomizeMode")
+                {
+                    Source = mainWindow
+                });
+            }
+
+            // 2. THE FIX: Reconstruct the visuals properly!
+            if (this.IsMenuBar)
+            {
+                // Inject the native menu into the floating window
+                var nativeMenu = new Menu { Background = System.Windows.Media.Brushes.Transparent };
+                nativeMenu.SetBinding(ItemsControl.ItemsSourceProperty, new Binding("DockedItems") { Source = this.DataContext });
+                nativeMenu.SetResourceReference(ItemsControl.ItemContainerStyleProperty, "NativeMenuBarItemStyle");
+
+                floatingBar.Items.Add(nativeMenu);
+            }
+            else
+            {
+                // Standard toolbar data binding
+                floatingBar.SetBinding(ItemsControl.ItemsSourceProperty, new Binding("DockedItems") { Source = this.DataContext });
+            }
+
+            // 3. Strip focus scope so it doesn't steal window activation! (From our earlier fix)
+            System.Windows.Input.FocusManager.SetIsFocusScope(floatingBar, false);
 
             floatingWindow.Content = floatingBar;
 
-            var mousePos = PointToScreen(Mouse.GetPosition(this));
-            var source = PresentationSource.FromVisual(this);
-            if (source?.CompositionTarget != null)
+            // 🟢 ADD THIS LINE: Save the dock state before we switch it to floating!
+            model.PreviousDockLocation = model.DockLocation;
+
+            model.RequestDockChange(DockLocation.Floating);
+
+            // 2. Get the exact screen coordinates of the cursor
+            GetCursorPos(out POINT p); // (Requires the Win32 GetCursorPos import you used in FloatingToolBarWindow)
+
+            // 3. Center the new floating window on the mouse
+            floatingWindow.Left = p.X - TearOffOffsetX;
+            floatingWindow.Top = p.Y - TearOffOffsetY;
+
+            // Hide the floating window if the user unchecks it in the dialog!
+            floatingWindow.SetBinding(Window.VisibilityProperty, new Binding("IsVisible")
             {
-                mousePos = source.CompositionTarget.TransformFromDevice.Transform(mousePos);
-            }
+                Source = this.DataContext,
+                Converter = new System.Windows.Controls.BooleanToVisibilityConverter()
+            });
 
-            floatingWindow.Left = mousePos.X - TearOffOffsetX;
-            floatingWindow.Top = mousePos.Y - TearOffOffsetY;
-
-            this.Visibility = Visibility.Collapsed;
-
+            // 4. Show the window
             floatingWindow.Show();
 
-            if (Mouse.LeftButton == MouseButtonState.Pressed)
+            // 5. Instantly resume the custom math drag so the user never notices the transition!
+            floatingWindow.StartManualDrag(TearOffOffsetX, TearOffOffsetY);
+        }
+
+        public void CheckForRedock(FloatingToolBarWindow floatingWindow)
+        {
+            ClearGhostAdorner();
+
+            var mainWindow = Application.Current.MainWindow;
+            if (mainWindow == null || mainWindow.Content is not FrameworkElement mainContent) return;
+
+            Point mousePos = Mouse.GetPosition(mainContent);
+            DockLocation targetDock = CalculateDockZone(mousePos, mainContent);
+
+            if (targetDock != DockLocation.Floating)
             {
-                // NEW: Wire up the initial tear-off drag as well
-                floatingWindow.LocationChanged += FloatingWindow_LocationChanged;
+                if (this.DataContext is ToolbarModel model)
+                {
+                    // 🟢 NEW: Find the exact ToolBarTray we are hovering over
+                    ToolBarTray? hitTray = null;
+                    var hitResult = VisualTreeHelper.HitTest(mainContent, mousePos);
+                    if (hitResult != null)
+                    {
+                        DependencyObject? current = hitResult.VisualHit;
+                        while (current != null)
+                        {
+                            if (current is ToolBarTray tray)
+                            {
+                                hitTray = tray;
+                                break;
+                            }
+                            current = VisualTreeHelper.GetParent(current);
+                        }
+                    }
 
-                floatingWindow.DragMove();
+                    // 🟢 NEW: Inject the exact row and column coordinate into the model!
+                    if (hitTray != null)
+                    {
+                        Point posInTray = Mouse.GetPosition(hitTray);
+                        CalculateDropBandAndIndex(hitTray, posInTray, targetDock, out int newBand, out int newBandIndex);
+                        model.Band = newBand;
+                        model.BandIndex = newBandIndex;
+                    }
+                    else
+                    {
+                        // If they snap to the magnetic edge but miss the populated tray area completely, push to a new line
+                        model.Band = 999;
+                        model.BandIndex = 0;
+                    }
 
-                floatingWindow.LocationChanged -= FloatingWindow_LocationChanged;
-                ClearGhostAdorner();
-                CheckForRedock(floatingWindow);
+                    model.RequestDockChange(targetDock);
+                }
+
+                floatingWindow.Close();
             }
         }
 
-        // NEW METHOD: The Hit-Testing Logic
-        public void CheckForRedock(FloatingToolBarWindow floatingWindow)
+        public void UpdateGhostAdorner(FloatingToolBarWindow floatingWindow)
         {
-            var mainWindow = Window.GetWindow(this);
-            if (mainWindow == null) return;
+            var mainWindow = Application.Current.MainWindow;
+            // FIX: Target the Content of the window, not the Window root!
+            // THE FIX: Change UIElement to FrameworkElement
+            if (mainWindow == null || mainWindow.Content is not FrameworkElement mainContent) return;
 
-            // Get the mouse cursor's exact position relative to the main application window
-            Point mousePos = Mouse.GetPosition(mainWindow);
+            Point mousePos = Mouse.GetPosition(mainContent);
+            DockLocation targetDock = CalculateDockZone(mousePos, mainContent);
 
-            // Define our target "Docking Zone" (e.g., the top 50 pixels of the main window)
-            bool isOverDockZone = mousePos.Y >= -20 && mousePos.Y <= 50 &&
-                                  mousePos.X >= -20 && mousePos.X <= mainWindow.ActualWidth + 20;
-
-            if (isOverDockZone)
+            if (targetDock != DockLocation.Floating)
             {
-                // Snap it back! Destroy the floating window and reveal the original.
-                floatingWindow.Close();
-                this.Visibility = Visibility.Visible;
+                if (_ghostAdorner == null)
+                {
+                    // Now that we are starting at the Content, WPF will successfully find the Adorner Layer!
+                    var layer = AdornerLayer.GetAdornerLayer(mainContent);
+                    if (layer != null)
+                    {
+                        // Attach the ghost to the Content frame
+                        _ghostAdorner = new DockingGhostAdorner(mainContent);
+                        layer.Add(_ghostAdorner);
+                    }
+                }
+
+                _ghostAdorner?.UpdateTargetDock(targetDock);
+            }
+            else
+            {
+                ClearGhostAdorner();
             }
         }
 
@@ -175,51 +351,382 @@ namespace CommandBar.UI.Controls
             }
         }
 
-        public void UpdateGhostAdorner(FloatingToolBarWindow floatingWindow)
+        public void ClearGhostAdorner()
         {
-            var mainWindow = Window.GetWindow(this);
-            // NEW: Get the root visual element inside the main window
-            if (mainWindow == null || mainWindow.Content is not UIElement rootElement) return;
-
-            Point mousePos = Mouse.GetPosition(mainWindow);
-            bool isOverDockZone = mousePos.Y >= -20 && mousePos.Y <= 50 &&
-                                  mousePos.X >= -20 && mousePos.X <= mainWindow.ActualWidth + 20;
-
-            if (isOverDockZone)
+            if (_ghostAdorner != null)
             {
-                if (_currentAdorner == null)
+                var mainWindow = Application.Current.MainWindow;
+                if (mainWindow?.Content is UIElement mainContent)
                 {
-                    // NEW: Ask WPF to find the AdornerLayer above the ROOT ELEMENT, not the window
-                    var adornerLayer = AdornerLayer.GetAdornerLayer(rootElement);
-                    if (adornerLayer != null)
-                    {
-                        double barHeight = this.ActualHeight > 0 ? this.ActualHeight : 32;
-                        Rect dockRect = new Rect(0, 0, mainWindow.ActualWidth, barHeight);
+                    var layer = AdornerLayer.GetAdornerLayer(mainContent);
+                    layer?.Remove(_ghostAdorner);
+                }
+                _ghostAdorner = null;
+            }
+        }
 
-                        // NEW: We adorn the root element
-                        _currentAdorner = new DockingGhostAdorner(rootElement, dockRect);
-                        adornerLayer.Add(_currentAdorner);
-                    }
+        protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
+        {
+            // THE PADLOCK
+            if (!IsCustomizeMode)
+            {
+                base.OnPreviewMouseLeftButtonDown(e);
+                return;
+            }
+
+            base.OnPreviewMouseLeftButtonDown(e);
+
+            // If they clicked the drag grip, ignore it! (Let your existing Tear-off logic handle it)
+            if (_dragGrip != null && _dragGrip.IsMouseOver) return;
+
+            // Use native WPF hit testing to find the clicked visual element
+            if (VisualTreeHelper.HitTest(this, e.GetPosition(this))?.VisualHit is DependencyObject hit)
+            {
+                // Check if the hit element belongs to one of our generated item containers
+                var container = ItemsControl.ContainerFromElement(this, hit) as ContentPresenter;
+                if (container != null)
+                {
+                    _isPreparingToDragItem = true;
+                    _itemDragStart = e.GetPosition(this);
+                }
+            }
+        }
+
+        protected override void OnPreviewMouseMove(MouseEventArgs e)
+        {
+            // THE PADLOCK
+            if (!IsCustomizeMode)
+            {
+                base.OnPreviewMouseMove(e);
+                return;
+            }
+            base.OnPreviewMouseMove(e);
+
+            if (_isPreparingToDragItem && e.LeftButton == MouseButtonState.Pressed)
+            {
+                Vector diff = e.GetPosition(this) - _itemDragStart;
+
+                // If they dragged the mouse past the "accidental twitch" threshold
+                if (Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
+                    Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance)
+                {
+                    _isPreparingToDragItem = false;
+                    StartItemDragDrop(e.GetPosition(this));
+                }
+            }
+        }
+
+        private void StartItemDragDrop(Point startPoint)
+        {
+            if (VisualTreeHelper.HitTest(this, startPoint)?.VisualHit is not DependencyObject hit) return;
+
+            var container = ItemsControl.ContainerFromElement(this, hit) as ContentPresenter;
+            if (container == null) return;
+
+            var dataItem = this.ItemContainerGenerator.ItemFromContainer(container);
+            if (dataItem == null) return;
+
+            // Package BOTH the item and its source collection into the drag payload
+            var dataObj = new DataObject();
+            dataObj.SetData("CommandItemFormat", dataItem);
+            dataObj.SetData("SourceListFormat", this.ItemsSource); // Pass the original list!
+
+            // 1. Capture the result of the drag! Allow both Copy and Move.
+            DragDropEffects result = DragDrop.DoDragDrop(container, dataObj, DragDropEffects.Move | DragDropEffects.Copy);
+
+            RemoveCaret();
+
+            // 2. THE REMOVAL LOGIC: Did they drop it into the void?
+            if (result == DragDropEffects.None)
+            {
+                if (this.ItemsSource is System.Collections.IList targetList)
+                {
+                    // Poof! Remove it from the live collection.
+                    targetList.Remove(dataItem);
+                }
+            }
+        }
+
+        protected override void OnDragOver(DragEventArgs e)
+        {
+            base.OnDragOver(e);
+
+            // THE PADLOCK
+            if (!IsCustomizeMode)
+            {
+                e.Effects = DragDropEffects.None;
+                e.Handled = true;
+                return;
+            }
+
+            // THE HANDSHAKE: Tell WPF we accept this payload!
+            if (e.Data.GetDataPresent("CommandItemFormat"))
+            {
+                e.Effects = DragDropEffects.Copy | DragDropEffects.Move;
+                e.Handled = true;
+
+                DrawCaret(e.GetPosition(this));
+            }
+        }
+
+        protected override void OnDragLeave(DragEventArgs e)
+        {
+            base.OnDragLeave(e);
+
+            // Calculate if the mouse has physically left the boundaries of the toolbar.
+            // If it's still inside, it means we are just moving between internal buttons!
+            Point pos = e.GetPosition(this);
+            if (pos.X < 0 || pos.X >= this.ActualWidth || pos.Y < 0 || pos.Y >= this.ActualHeight)
+            {
+                RemoveCaret();
+            }
+        }
+
+        protected override void OnDrop(DragEventArgs e)
+        {
+            base.OnDrop(e);
+            RemoveCaret();
+
+            // THE PADLOCK
+            if (!IsCustomizeMode) return;
+
+            // Extract the item AND the source list from the payload
+            var draggedData = e.Data.GetData("CommandItemFormat") as CommandItem;
+            var sourceList = e.Data.GetData("SourceListFormat") as System.Collections.IList;
+
+            if (draggedData == null || this.ItemsSource is not System.Collections.IList targetList) return;
+
+            int insertIndex = CalculateInsertionState(e.GetPosition(this), out _);
+
+            // Decide if this is an external copy, internal shuffle, or cross-toolbar steal
+            if (sourceList == null)
+            {
+                // 1. EXTERNAL COPY: It came from the Customize Dialog (which doesn't pack a source list)
+                targetList.Insert(insertIndex, draggedData);
+            }
+            else if (sourceList == targetList)
+            {
+                // 2. INTERNAL SHUFFLE: It's the same toolbar.
+                int oldIndex = targetList.IndexOf(draggedData);
+                if (oldIndex != -1 && oldIndex != insertIndex)
+                {
+                    if (oldIndex < insertIndex) insertIndex--;
+                    targetList.RemoveAt(oldIndex);
+                    targetList.Insert(insertIndex, draggedData);
                 }
             }
             else
             {
-                ClearGhostAdorner();
+                // 3. CROSS-TOOLBAR STEAL: It's a DIFFERENT toolbar! Steal it from the source list.
+                sourceList.Remove(draggedData);
+                targetList.Insert(insertIndex, draggedData);
             }
+
+            e.Handled = true;
         }
 
-        public void ClearGhostAdorner()
+        // --- VISUAL & MATH HELPERS ---
+
+        // --- NEW GEOMETRIC MATH ENGINE ---
+
+        private void DrawCaret(Point mousePos)
         {
-            if (_currentAdorner != null)
+            if (_caretAdorner == null)
             {
-                var mainWindow = Window.GetWindow(this);
-                // NEW: Ensure we clear it from the correct layer
-                if (mainWindow?.Content is UIElement rootElement)
+                var adornerLayer = AdornerLayer.GetAdornerLayer(this);
+                if (adornerLayer == null) return;
+                _caretAdorner = new InsertionCaretAdorner(this);
+                adornerLayer.Add(_caretAdorner);
+            }
+
+            CalculateInsertionState(mousePos, out double caretX);
+            _caretAdorner.UpdatePosition(new Point(caretX, 0));
+        }
+
+        private int CalculateInsertionState(Point mousePos, out double caretX)
+        {
+            int targetIndex = this.Items.Count;
+            caretX = 0;
+
+            if (this.Items.Count == 0) return 0;
+
+            UIElement? lastContainer = null;
+
+            // Iterate through every visible item in the toolbar
+            for (int i = 0; i < this.Items.Count; i++)
+            {
+                var container = this.ItemContainerGenerator.ContainerFromIndex(i) as UIElement;
+                if (container == null) continue;
+
+                lastContainer = container;
+
+                // Calculate the exact mathematical midpoint of the button
+                Point containerPos = container.TranslatePoint(new Point(0, 0), this);
+                double containerMidpoint = containerPos.X + (container.RenderSize.Width / 2);
+
+                // If the mouse is to the left of the midpoint, this is our drop target!
+                if (mousePos.X < containerMidpoint)
                 {
-                    var adornerLayer = AdornerLayer.GetAdornerLayer(rootElement);
-                    adornerLayer?.Remove(_currentAdorner);
+                    targetIndex = i;
+                    caretX = containerPos.X; // Snap caret to the left edge
+                    return targetIndex;
                 }
-                _currentAdorner = null;
+            }
+
+            // If we looped through everything, the mouse is past the very last button
+            if (lastContainer != null)
+            {
+                Point lastPos = lastContainer.TranslatePoint(new Point(0, 0), this);
+                caretX = lastPos.X + lastContainer.RenderSize.Width; // Snap caret to the right edge
+            }
+
+            return targetIndex;
+        }
+
+        private void RemoveCaret()
+        {
+            if (_caretAdorner != null)
+            {
+                AdornerLayer.GetAdornerLayer(this)?.Remove(_caretAdorner);
+                _caretAdorner = null;
+            }
+        }
+        // NEW: Calculates which zone the mouse is currently hovering over
+        private Core.Models.DockLocation CalculateDockZone(Point mousePos, FrameworkElement window)
+        {
+            // 🟢 FIX 1: If the mouse is dragged completely OUTSIDE the main window, it stays floating!
+            if (mousePos.X < 0 || mousePos.Y < 0 || mousePos.X > window.ActualWidth || mousePos.Y > window.ActualHeight)
+            {
+                return Core.Models.DockLocation.Floating;
+            }
+
+            // 🟢 FIX 2: Try the Visual Hit Test. This allows you to easily drop onto POPULATED trays anywhere they are.
+            var hitResult = System.Windows.Media.VisualTreeHelper.HitTest(window, mousePos);
+            if (hitResult != null)
+            {
+                DependencyObject current = hitResult.VisualHit;
+                while (current != null)
+                {
+                    if (current is System.Windows.Controls.ToolBarTray tray)
+                    {
+                        var dock = System.Windows.Controls.DockPanel.GetDock(tray);
+                        return dock switch
+                        {
+                            System.Windows.Controls.Dock.Top => Core.Models.DockLocation.Top,
+                            System.Windows.Controls.Dock.Bottom => Core.Models.DockLocation.Bottom,
+                            System.Windows.Controls.Dock.Left => Core.Models.DockLocation.Left,
+                            System.Windows.Controls.Dock.Right => Core.Models.DockLocation.Right,
+                            _ => Core.Models.DockLocation.Floating
+                        };
+                    }
+                    current = System.Windows.Media.VisualTreeHelper.GetParent(current);
+                }
+            }
+
+            // 🟢 FIX 3: If we didn't hit a tray (because it's empty and collapsed to 0px), 
+            // check if the mouse is hovering tightly against the edge of the window.
+            double edgeThreshold = 30.0; // The "magnetic" snap distance
+
+            if (mousePos.Y <= edgeThreshold) return Core.Models.DockLocation.Top;
+            if (mousePos.Y >= window.ActualHeight - edgeThreshold) return Core.Models.DockLocation.Bottom;
+            if (mousePos.X <= edgeThreshold) return Core.Models.DockLocation.Left;
+            if (mousePos.X >= window.ActualWidth - edgeThreshold) return Core.Models.DockLocation.Right;
+
+            // Otherwise, it stays floating!
+            return Core.Models.DockLocation.Floating;
+        }
+
+        // 🟢 NEW: Calculates the exact Row (Band) and Column (BandIndex) based on mouse drop position
+        private void CalculateDropBandAndIndex(ToolBarTray tray, Point dropPos, Core.Models.DockLocation dock, out int band, out int bandIndex)
+        {
+            band = 0;
+            bandIndex = 0;
+            if (tray.ToolBars.Count == 0) return;
+
+            bool isHorizontal = (dock == Core.Models.DockLocation.Top || dock == Core.Models.DockLocation.Bottom);
+
+            double crossAxisPos = isHorizontal ? dropPos.Y : dropPos.X;
+            double mainAxisPos = isHorizontal ? dropPos.X : dropPos.Y;
+
+            int targetBand = -1;
+            int maxBand = 0;
+
+            // 1. Find the target row (Band)
+            foreach (ToolBar tb in tray.ToolBars)
+            {
+                int tbBand = tb.Band; // FIXED: Accessing property directly
+                if (tbBand > maxBand) maxBand = tbBand;
+
+                Point tbPos = tb.TranslatePoint(new Point(0, 0), tray);
+                double tbCrossStart = isHorizontal ? tbPos.Y : tbPos.X;
+                double tbCrossSize = isHorizontal ? tb.ActualHeight : tb.ActualWidth;
+
+                // Expand hit area slightly vertically to make dropping between rows forgiving
+                if (crossAxisPos >= tbCrossStart - 10 && crossAxisPos <= (tbCrossStart + tbCrossSize + 10))
+                {
+                    targetBand = tbBand;
+                    break;
+                }
+            }
+
+            if (targetBand == -1)
+            {
+                // Missed all existing bands, put it on a new one at the bottom
+                band = maxBand + 1;
+                bandIndex = 0;
+                return;
+            }
+
+            band = targetBand;
+            int targetIndex = 0;
+
+            // 2. Find the target column (BandIndex) inside that row
+            var barsInBand = new System.Collections.Generic.List<ToolBar>();
+            foreach (ToolBar tb in tray.ToolBars)
+            {
+                if (tb.Band == band) barsInBand.Add(tb); // FIXED: Accessing property directly
+            }
+
+            // Sort them spatially
+            barsInBand.Sort((a, b) =>
+            {
+                Point posA = a.TranslatePoint(new Point(0, 0), tray);
+                Point posB = b.TranslatePoint(new Point(0, 0), tray);
+                return isHorizontal ? posA.X.CompareTo(posB.X) : posA.Y.CompareTo(posB.Y);
+            });
+
+            foreach (var tb in barsInBand)
+            {
+                Point tbPos = tb.TranslatePoint(new Point(0, 0), tray);
+                double tbMainStart = isHorizontal ? tbPos.X : tbPos.Y;
+                double tbMainSize = isHorizontal ? tb.ActualWidth : tb.ActualHeight;
+
+                if (mainAxisPos < tbMainStart + (tbMainSize / 2))
+                {
+                    // Drop before this toolbar
+                    targetIndex = tb.BandIndex; // FIXED
+                    break;
+                }
+                else
+                {
+                    // Drop after this toolbar
+                    targetIndex = tb.BandIndex + 1; // FIXED
+                }
+            }
+
+            bandIndex = targetIndex;
+        }
+
+        private void OnMenuItemClick(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (e.OriginalSource is System.Windows.Controls.MenuItem menuItem)
+            {
+                // WPF Magic: We explicitly set StaysOpenOnClick="True" on our checkboxes earlier!
+                // If it is a checkbox, we ignore it. If it is the Customize or Reset button, we snap the popup shut!
+                if (!menuItem.StaysOpenOnClick)
+                {
+                    this.IsOverflowOpen = false;
+                }
             }
         }
     }

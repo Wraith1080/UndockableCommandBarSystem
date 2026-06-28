@@ -7,11 +7,23 @@ namespace CommandBar.Core.Models
         [ObservableProperty]
         private bool _isChecked;
 
-        // You can optionally intercept the state change if the manager needs to know immediately
-        partial void OnIsCheckedChanged(bool value)
+        // NEW: Override the base clone method
+        public override CommandItem Clone()
         {
-            // Logic to handle when the toggle state changes, 
-            // separate from the actual ExecuteItem command if needed.
+            return new CommandToggleItem
+            {
+                Id = this.Id,
+                Text = this.Text,
+                Tooltip = this.Tooltip,
+                IconGeometry = this.IconGeometry,
+                ActionCallback = this.ActionCallback,
+                DisplayMode = this.DisplayMode,
+                KeepOriginalColors = this.KeepOriginalColors,
+                RawSvgContent = this.RawSvgContent,
+                IsVisible = this.IsVisible,
+
+                IsChecked = this.IsChecked // Crucial for toggles!
+            };
         }
     }
 }

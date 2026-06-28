@@ -1,0 +1,45 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <SolidColorBrush x:Key="CmdBar.Background" Color="#ECE9D8"/>
+    <SolidColorBrush x:Key="CmdBar.Foreground" Color="Black"/>
+    <SolidColorBrush x:Key="CmdBar.Border" Color="#ACA899"/>
+
+    <SolidColorBrush x:Key="CmdBar.IconFill" Color="Black"/>
+
+    <SolidColorBrush x:Key="CmdBar.Button.Hover.Background" Color="#C1D2EE"/>
+    <SolidColorBrush x:Key="CmdBar.Button.Hover.Border" Color="#316AC5"/>
+
+    <SolidColorBrush x:Key="CmdBar.Button.Checked.Background" Color="#98B5E2"/>
+    <SolidColorBrush x:Key="CmdBar.Button.Checked.Border" Color="#316AC5"/>
+
+    <CornerRadius x:Key="CmdBar.Button.CornerRadius">0</CornerRadius>
+    <Thickness x:Key="CmdBar.Button.Padding">2,2</Thickness>
+    <Thickness x:Key="CmdBar.Button.Padding.Vertical">2,2</Thickness>
+
+    <CornerRadius x:Key="CmdBar.Menu.CornerRadius">0</CornerRadius>
+    <CornerRadius x:Key="CmdBar.Window.CornerRadius">0</CornerRadius>
+
+    <Thickness x:Key="CmdBar.ToolBar.Margin">0</Thickness>
+    <Thickness x:Key="CmdBar.ToolBar.Padding">0</Thickness>
+    <Thickness x:Key="CmdBar.ToolBar.BorderThickness">1</Thickness>
+    <CornerRadius x:Key="CmdBar.ToolBar.CornerRadius">0</CornerRadius>
+
+    <Thickness x:Key="CmdBar.Menu.Margin">0</Thickness>
+    <sys:Double x:Key="CmdBar.Menu.PopupOffset">0</sys:Double>
+    <sys:Double x:Key="CmdBar.Menu.MinWidth">120</sys:Double>
+
+    <DropShadowEffect x:Key="CmdBar.Menu.Shadow" BlurRadius="4" ShadowDepth="2" Direction="315" Color="Black" Opacity="0.4"/>
+    <Thickness x:Key="CmdBar.Menu.ShadowMargin">0,0,8,8</Thickness>
+
+    <StreamGeometry x:Key="CmdBar.ToolBar.OverflowIcon.Horizontal">M 0,0 L 3,3 L 6,0</StreamGeometry>
+    <StreamGeometry x:Key="CmdBar.ToolBar.OverflowIcon.Vertical">M 0,0 L 3,3 L 0,6</StreamGeometry>
+    <StreamGeometry x:Key="CmdBar.Menu.DropdownArrow">M 0,0 L 3,3 L 6,0 Z</StreamGeometry>
+
+    <SolidColorBrush x:Key="CmdBar.ToolBar.Grip.Background" Color="#ACA899" />
+    <sys:Double x:Key="CmdBar.ToolBar.Grip.Thickness">3</sys:Double>
+    <CornerRadius x:Key="CmdBar.ToolBar.Grip.CornerRadius">0</CornerRadius>
+    <Thickness x:Key="CmdBar.ToolBar.Grip.Margin">2,2,2,2</Thickness>
+
+</ResourceDictionary>

@@ -1,24 +1,31 @@
-﻿using System.Text;
+﻿using System;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace CommandBar.DemoApp
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
         public MainWindow()
         {
             InitializeComponent();
+
+            // 🟢 NEW: Wait until the window is fully built before loading the layout!
+            this.Loaded += (s, e) =>
+            {
+                if (this.DataContext is MainViewModel vm)
+                {
+                    vm.InitializeLayout();
+                }
+            };
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            base.OnClosed(e);
+            if (this.DataContext is MainViewModel vm)
+            {
+                vm.SaveCurrentLayout();
+            }
         }
     }
 }
