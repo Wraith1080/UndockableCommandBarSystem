@@ -407,5 +407,20 @@ namespace CommandBar.UI.Dialogs
                 CommandBar.UI.ThemeManager.ChangeTheme("Classic");
             }
         }
+
+        // Allows the user to drag the custom window around the screen
+        private void TitleBar_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.ButtonState == System.Windows.Input.MouseButtonState.Pressed)
+            {
+                this.DragMove();
+            }
+        }
+
+        // Closes the dialog
+        private void CloseButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            this.Close();
+        }
     }
 }
