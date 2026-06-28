@@ -177,6 +177,10 @@ namespace CommandBar.UI.Controls
                     // 🟢 FIX: Restore the toolbar to its previous home!
                     if (this.DataContext is ToolbarModel model)
                     {
+                        // 🟢 FIX: Restore the exact row and column before requesting the move!
+                        model.Band = model.PreviousBand;
+                        model.BandIndex = model.PreviousBandIndex;
+
                         model.RequestDockChange(model.PreviousDockLocation);
                     }
                     this.Close();

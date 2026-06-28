@@ -104,8 +104,22 @@ namespace CommandBar.UI.Controls
             // Find the native dotted grip built into the standard WPF ToolBar
             if (GetTemplateChild("ToolBarThumb") is System.Windows.Controls.Primitives.Thumb thumb)
             {
+                // 🟢 ADD THIS: Capture the state the exact moment the drag begins!
+                thumb.DragStarted += Thumb_DragStarted;
+
                 // Listen to it move instead of hijacking the initial click!
                 thumb.DragDelta += Thumb_DragDelta;
+            }
+        }
+
+        private void Thumb_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
+        {
+            if (this.DataContext is Core.Models.ToolbarModel model)
+            {
+                // Save the exact state before the WPF ToolBarTray tries to move anything!
+                model.PreviousDockLocation = model.DockLocation;
+                model.PreviousBand = model.Band;
+                model.PreviousBandIndex = model.BandIndex;
             }
         }
 

@@ -28,6 +28,12 @@ namespace CommandBar.Core.Models
         [ObservableProperty]
         private DockLocation _previousDockLocation = DockLocation.Top;
 
+        [ObservableProperty]
+        private int _previousBand;
+
+        [ObservableProperty]
+        private int _previousBandIndex;
+
         private double _floatingLeft;
         public double FloatingLeft
         {
