@@ -239,6 +239,10 @@ namespace CommandBar.DemoApp
             {
                 string json = File.ReadAllText("user_layout.json");
                 Manager.LoadLayoutFromJson(json);
+                if (System.Windows.Application.Current != null)
+                {
+                    System.Windows.Application.Current.Resources["CmdBar.IconSize"] = Manager.CurrentIconSize;
+                }
             }
             else if (File.Exists("DefaultLayout.json"))
             {

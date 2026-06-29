@@ -16,13 +16,8 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border Background="{TemplateBinding Background}" 
-        BorderBrush="{TemplateBinding BorderBrush}" 
-        BorderThickness="{TemplateBinding BorderThickness}" 
-        CornerRadius="{DynamicResource CmdBar.Button.CornerRadius}">
-                        <ContentPresenter HorizontalAlignment="Center" x:Name="ContentHost"
-                      VerticalAlignment="Center" 
-                      Margin="{DynamicResource CmdBar.Button.Padding}"/>
+                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{DynamicResource CmdBar.Button.CornerRadius}">
+                        <ContentPresenter HorizontalAlignment="Center" x:Name="ContentHost" VerticalAlignment="Center" Margin="{DynamicResource CmdBar.Button.Padding}"/>
                     </Border>
                     <ControlTemplate.Triggers>
                         <DataTrigger Binding="{Binding Orientation, RelativeSource={RelativeSource AncestorType=ToolBar}}" Value="Vertical">
@@ -53,13 +48,8 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
-                    <Border Background="{TemplateBinding Background}" 
-        BorderBrush="{TemplateBinding BorderBrush}" 
-        BorderThickness="{TemplateBinding BorderThickness}" 
-        CornerRadius="{DynamicResource CmdBar.Button.CornerRadius}">
-                        <ContentPresenter HorizontalAlignment="Center" 
-                      VerticalAlignment="Center" 
-                      Margin="{DynamicResource CmdBar.Button.Padding}" x:Name="ContentHost"/>
+                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{DynamicResource CmdBar.Button.CornerRadius}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{DynamicResource CmdBar.Button.Padding}" x:Name="ContentHost"/>
                     </Border>
                     <ControlTemplate.Triggers>
                         <DataTrigger Binding="{Binding Orientation, RelativeSource={RelativeSource AncestorType=ToolBar}}" Value="Vertical">
@@ -94,8 +84,7 @@
                 </Style>
             </Path.Style>
         </Path>
-        <Image Source="{Binding RawSvgContent, Converter={StaticResource RawSvgConverter}}" Width="{DynamicResource CmdBar.IconSize}"
-       Height="{DynamicResource CmdBar.IconSize}">
+        <Image Source="{Binding RawSvgContent, Converter={StaticResource RawSvgConverter}}" Width="{DynamicResource CmdBar.IconSize}" Height="{DynamicResource CmdBar.IconSize}">
             <Image.Style>
                 <Style TargetType="Image">
                     <Setter Property="Visibility" Value="Collapsed"/>
@@ -249,7 +238,6 @@
         <Button x:Name="RootButton" Style="{StaticResource CommandButtonStyle}" Command="{Binding ExecuteItemCommand}" Focusable="False" ToolTip="{Binding Tooltip}" Visibility="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <StackPanel Orientation="Horizontal">
                 <Grid x:Name="IconPath" Width="{DynamicResource CmdBar.IconSize}" Height="{DynamicResource CmdBar.IconSize}" Margin="0,0,4,0">
-
                     <Path Data="{Binding IconGeometry}" Fill="{DynamicResource CmdBar.IconFill}" Stretch="Uniform">
                         <Path.Style>
                             <Style TargetType="Path">
@@ -275,7 +263,6 @@
                             </Style>
                         </Image.Style>
                     </Image>
-
                 </Grid>
                 <AccessText x:Name="LabelText" Text="{Binding Text}" VerticalAlignment="Center"/>
             </StackPanel>
@@ -312,7 +299,6 @@
         <ToggleButton x:Name="RootButton" Style="{StaticResource CommandToggleButtonStyle}" IsChecked="{Binding IsChecked, Mode=TwoWay}" Command="{Binding ExecuteItemCommand}" Focusable="False" ToolTip="{Binding Tooltip}" Visibility="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <StackPanel Orientation="Horizontal">
                 <Grid x:Name="IconPath" Width="{DynamicResource CmdBar.IconSize}" Height="{DynamicResource CmdBar.IconSize}" Margin="0,0,4,0">
-
                     <Path Data="{Binding IconGeometry}" Fill="{DynamicResource CmdBar.IconFill}" Stretch="Uniform">
                         <Path.Style>
                             <Style TargetType="Path">
@@ -338,7 +324,6 @@
                             </Style>
                         </Image.Style>
                     </Image>
-
                 </Grid>
                 <AccessText x:Name="LabelText" Text="{Binding Text}" VerticalAlignment="Center"/>
             </StackPanel>
@@ -372,21 +357,13 @@
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type models:CommandSeparator}">
-        <Border x:Name="SepBorder" 
-            Width="1" 
-            Background="{DynamicResource CmdBar.Border}" 
-            Margin="2,4" 
-            HorizontalAlignment="Center" 
-            VerticalAlignment="Stretch"
-            Visibility="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+        <Border x:Name="SepBorder" Width="1" Background="{DynamicResource CmdBar.Border}" Margin="2,4" HorizontalAlignment="Center" VerticalAlignment="Stretch" Visibility="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
         <DataTemplate.Triggers>
             <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ToolBar}, Path=Orientation}" Value="Vertical">
                 <Setter TargetName="SepBorder" Property="Width" Value="NaN"/>
                 <Setter TargetName="SepBorder" Property="Height" Value="1"/>
-
                 <Setter TargetName="SepBorder" Property="Margin" Value="4,2"/>
-
                 <Setter TargetName="SepBorder" Property="HorizontalAlignment" Value="Stretch"/>
                 <Setter TargetName="SepBorder" Property="VerticalAlignment" Value="Center"/>
             </DataTrigger>
@@ -395,34 +372,17 @@
 
     <DataTemplate DataType="{x:Type models:CommandDropdownItem}">
         <Menu x:Name="RootMenu" Background="Transparent" Margin="{DynamicResource CmdBar.Menu.Margin}" Visibility="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
-
             <MenuItem Focusable="False" Padding="{DynamicResource CmdBar.Button.Padding}" ItemsSource="{Binding ChildItems}" x:Name="RootMenuItem">
-
                 <MenuItem.Template>
                     <ControlTemplate TargetType="MenuItem">
-                        <Border x:Name="RootBorder" 
-                            Background="Transparent" 
-                            BorderBrush="Transparent" 
-                            BorderThickness="1" 
-                            CornerRadius="{DynamicResource CmdBar.Button.CornerRadius}">
+                        <Border x:Name="RootBorder" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" CornerRadius="{DynamicResource CmdBar.Button.CornerRadius}">
                             <Grid>
                                 <ContentPresenter ContentSource="Header" Margin="{TemplateBinding Padding}" RecognizesAccessKey="True"/>
-
-                                <Popup x:Name="PART_Popup" AllowsTransparency="True" Placement="Bottom" 
-       VerticalOffset="{DynamicResource CmdBar.Menu.PopupOffset}" 
-       IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}" Focusable="False">
-
-                                    <Border Background="{DynamicResource CmdBar.Background}" 
-            BorderBrush="{DynamicResource CmdBar.Border}" 
-            BorderThickness="1" 
-            CornerRadius="{DynamicResource CmdBar.Menu.CornerRadius}" 
-            Padding="2" Margin="{DynamicResource CmdBar.Menu.ShadowMargin}"
-            Effect="{DynamicResource CmdBar.Menu.Shadow}" MinWidth="{DynamicResource CmdBar.Menu.MinWidth}">
-
+                                <Popup x:Name="PART_Popup" AllowsTransparency="True" Placement="Bottom" VerticalOffset="{DynamicResource CmdBar.Menu.PopupOffset}" IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}" Focusable="False">
+                                    <Border Background="{DynamicResource CmdBar.Background}" BorderBrush="{DynamicResource CmdBar.Border}" BorderThickness="1" CornerRadius="{DynamicResource CmdBar.Menu.CornerRadius}" Padding="2" Margin="{DynamicResource CmdBar.Menu.ShadowMargin}" Effect="{DynamicResource CmdBar.Menu.Shadow}" MinWidth="{DynamicResource CmdBar.Menu.MinWidth}">
                                         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="500" BorderThickness="0">
                                             <ItemsPresenter Grid.IsSharedSizeScope="True" />
                                         </ScrollViewer>
-
                                     </Border>
                                 </Popup>
                             </Grid>
@@ -457,11 +417,7 @@
                 <MenuItem.Header>
                     <StackPanel Orientation="Horizontal">
                         <Grid x:Name="IconPath" Margin="0,0,4,0">
-                            <Path Data="{Binding IconGeometry}" 
-      Fill="{DynamicResource CmdBar.IconFill}" 
-      Stretch="Uniform" 
-      Width="{DynamicResource CmdBar.IconSize}" 
-      Height="{DynamicResource CmdBar.IconSize}">
+                            <Path Data="{Binding IconGeometry}" Fill="{DynamicResource CmdBar.IconFill}" Stretch="Uniform" Width="{DynamicResource CmdBar.IconSize}" Height="{DynamicResource CmdBar.IconSize}">
                                 <Path.Style>
                                     <Style TargetType="Path">
                                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -487,14 +443,9 @@
                             </Image>
                         </Grid>
                         <AccessText x:Name="LabelText" Text="{Binding Text}" VerticalAlignment="Center"/>
-
-                        <Path x:Name="DropdownArrow" 
-                          Data="{DynamicResource CmdBar.Menu.DropdownArrow}" 
-                          Fill="{DynamicResource CmdBar.Foreground}" 
-                          VerticalAlignment="Center" Margin="4,2,0,0"/>
+                        <Path x:Name="DropdownArrow" Data="{DynamicResource CmdBar.Menu.DropdownArrow}" Fill="{DynamicResource CmdBar.Foreground}" VerticalAlignment="Center" Margin="4,2,0,0"/>
                     </StackPanel>
                 </MenuItem.Header>
-
                 <MenuItem.ItemContainerStyle>
                     <Style TargetType="MenuItem">
                         <Setter Property="Header" Value="{Binding Text}"/>
@@ -505,16 +456,13 @@
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="MenuItem">
-                                    <Border x:Name="ItemBorder" Background="Transparent" 
-                                        CornerRadius="{DynamicResource CmdBar.Button.CornerRadius}" 
-                                        Margin="2,1">
+                                    <Border x:Name="ItemBorder" Background="Transparent" CornerRadius="{DynamicResource CmdBar.Button.CornerRadius}" Margin="2,1">
                                         <Grid Margin="4">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto" SharedSizeGroup="IconColumnGroup" MinWidth="{DynamicResource CmdBar.IconSize}" />
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-
                                             <ContentPresenter Margin="0,0,8,0" ContentSource="Icon" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                             <ContentPresenter Grid.Column="1" ContentSource="Header" VerticalAlignment="Center" RecognizesAccessKey="True"/>
                                             <TextBlock Grid.Column="2" Text="{TemplateBinding InputGestureText}" Margin="16,0,0,0" Opacity="0.6" VerticalAlignment="Center"/>
@@ -533,7 +481,6 @@
                         </Setter>
                     </Style>
                 </MenuItem.ItemContainerStyle>
-
             </MenuItem>
         </Menu>
 
@@ -548,7 +495,6 @@
             <DataTrigger Binding="{Binding DisplayMode}" Value="TextOnly">
                 <Setter TargetName="IconPath" Property="Visibility" Value="Collapsed" />
             </DataTrigger>
-
             <MultiDataTrigger>
                 <MultiDataTrigger.Conditions>
                     <Condition Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type ToolBar}}, Path=Orientation}" Value="Vertical" />
@@ -567,5 +513,4 @@
             </MultiDataTrigger>
         </DataTemplate.Triggers>
     </DataTemplate>
-
 </ResourceDictionary>

@@ -28,7 +28,7 @@
 
     <Thickness x:Key="CmdBar.Menu.Margin">0</Thickness>
     <sys:Double x:Key="CmdBar.Menu.PopupOffset">0</sys:Double>
-    <sys:Double x:Key="CmdBar.Menu.MinWidth">120</sys:Double>
+    <sys:Double x:Key="CmdBar.Menu.MinWidth">180</sys:Double>
 
     <DropShadowEffect x:Key="CmdBar.Menu.Shadow" BlurRadius="4" ShadowDepth="2" Direction="315" Color="Black" Opacity="0.4"/>
     <Thickness x:Key="CmdBar.Menu.ShadowMargin">0,0,8,8</Thickness>

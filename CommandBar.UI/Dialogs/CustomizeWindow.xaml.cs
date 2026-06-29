@@ -17,6 +17,18 @@ namespace CommandBar.UI.Dialogs
         public CustomizeWindow()
         {
             InitializeComponent();
+            // 1. Read the current size from the application resources (default to 16 if it somehow fails)
+            if (Application.Current.Resources["CmdBar.IconSize"] is double currentSize)
+            {
+                IconScaleSlider.Value = currentSize;
+            }
+            else
+            {
+                IconScaleSlider.Value = 16;
+            }
+
+            // 2. NOW subscribe to the event so it only fires when the user actually drags it!
+            IconScaleSlider.ValueChanged += IconScaleSlider_ValueChanged;
         }
 
         private void MasterCommandList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -425,12 +437,18 @@ namespace CommandBar.UI.Dialogs
 
         private void IconScaleSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            // Ensure Application is running and resources are available
             if (Application.Current == null) return;
 
-            // Overwrite the dynamic resource. 
-            // Every icon bound to "CmdBar.IconSize" will instantly resize!
+            // 1. Update the Live UI instantly
             Application.Current.Resources["CmdBar.IconSize"] = e.NewValue;
+
+            // 2. Update the Manager so it saves the correct value to JSON!
+            // (Ensure you reference your local CommandBarManager instance here)
+
+            if (this.DataContext is CommandBarManager manager)
+            {
+                manager.CurrentIconSize = e.NewValue;
+            }
         }
     }
 }

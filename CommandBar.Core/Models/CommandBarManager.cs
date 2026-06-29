@@ -38,6 +38,7 @@ namespace CommandBar.Core.Models
         public IEnumerable<CommandItem> AvailableCommands =>
             _masterCommandRegistry.Values.Where(cmd => !(cmd is CommandSeparator));
 
+        public double CurrentIconSize { get; set; } = 16;
         /// <summary>
         /// Registers a command into the master dictionary. 
         /// This is called ONCE at application startup.
@@ -125,6 +126,13 @@ namespace CommandBar.Core.Models
             var layoutOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             var layout = JsonSerializer.Deserialize<LayoutFileDto>(jsonString, layoutOptions);
 
+            if (layout == null) return;
+
+            if (layout.IconSize >= 4)
+            {
+                this.CurrentIconSize = layout.IconSize;
+            }
+
             if (layout?.Toolbars == null) return;
 
             // 2. Loop through the JSON toolbars
@@ -178,6 +186,7 @@ namespace CommandBar.Core.Models
         public string SaveLayoutToJson()
         {
             var layout = new LayoutFileDto();
+            layout.IconSize = this.CurrentIconSize; // 🟢 NEW: Pass to DTO before saving
 
             // Local helper function to process each dock collection
             void ProcessToolbars(IEnumerable<ToolbarModel> toolbars)
@@ -478,6 +487,7 @@ namespace CommandBar.Core.Models
     // --- NEW: LIGHTWEIGHT DTOs FOR JSON PARSING ---
     public class LayoutFileDto
     {
+        public double IconSize { get; set; } = 16; // 🟢 NEW: Stores the saved size
         public List<ToolbarConfigDto> Toolbars { get; set; } = new();
     }
 
