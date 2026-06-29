@@ -439,15 +439,43 @@ namespace CommandBar.UI.Dialogs
         {
             if (Application.Current == null) return;
 
-            // 1. Update the Live UI instantly
+            // 1. Update the global Icon Size instantly
             Application.Current.Resources["CmdBar.IconSize"] = e.NewValue;
 
-            // 2. Update the Manager so it saves the correct value to JSON!
-            // (Ensure you reference your local CommandBarManager instance here)
-
+            // 2. Update the Manager for JSON Persistence
             if (this.DataContext is CommandBarManager manager)
             {
                 manager.CurrentIconSize = e.NewValue;
+            }
+
+            // 3. Obliterate the ToolBar cache
+            if (Application.Current.MainWindow != null)
+            {
+                ForceToolBarLayoutUpdate(Application.Current.MainWindow);
+            }
+        }
+
+        private void ForceToolBarLayoutUpdate(DependencyObject parent)
+        {
+            if (parent == null) return;
+
+            for (int i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = System.Windows.Media.VisualTreeHelper.GetChild(parent, i);
+
+                if (child is System.Windows.Controls.ToolBar toolBar)
+                {
+                    // THE ULTIMATE FIX: Nudge the CollectionView!
+                    // This forces the ToolBar to completely drop its visual cache and 
+                    // recreate all items (even the frozen overflow ones) at the correct size.
+                    if (toolBar.ItemsSource != null)
+                    {
+                        var view = System.Windows.Data.CollectionViewSource.GetDefaultView(toolBar.ItemsSource);
+                        view?.Refresh();
+                    }
+                }
+
+                ForceToolBarLayoutUpdate(child);
             }
         }
     }

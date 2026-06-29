@@ -5,6 +5,7 @@
 	xmlns:local="clr-namespace:CommandBar.UI"
     xmlns:sys="clr-namespace:System;assembly=mscorlib">
     <sys:Double x:Key="CmdBar.IconSize">16</sys:Double>
+    <sys:Double x:Key="CmdBar.ToolBarMaxSize">28</sys:Double>
 	<BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     <Style TargetType="{x:Type controls:UndockableToolBar}">
         <Style.Triggers>
@@ -44,7 +45,7 @@
                                     </ControlTemplate>
                                 </Thumb.Template>
                             </Thumb>
-                            <ToggleButton x:Name="PART_OverflowButton" IsChecked="{Binding IsOverflowOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" Cursor="Hand" Background="Transparent" BorderBrush="Transparent" BorderThickness="1">
+                            <ToggleButton x:Name="PART_OverflowButton" MinHeight="{DynamicResource CmdBar.IconSize}" MinWidth="{DynamicResource CmdBar.IconSize}" IsChecked="{Binding IsOverflowOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" Cursor="Hand" Background="Transparent" BorderBrush="Transparent" BorderThickness="1">
                                 <ToggleButton.Style>
                                     <Style TargetType="ToggleButton">
                                         <Setter Property="DockPanel.Dock" Value="Right"/>
@@ -280,7 +281,7 @@
                                     </StackPanel>
                                 </Border>
                             </Popup>
-                            <ToolBarPanel x:Name="PART_ToolBarPanel" IsItemsHost="True" Margin="0,0,4,0" />
+                            <ToolBarPanel x:Name="PART_ToolBarPanel" IsItemsHost="True" Margin="0,0,4,0" MinHeight="{DynamicResource CmdBar.IconSize}" />
                         </DockPanel>
 					</Border>
 
